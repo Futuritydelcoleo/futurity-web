@@ -72,6 +72,7 @@ insert into public.horses (name, slug, birth_year, owner, stable) values ('Conch
 insert into public.horses (name, slug, birth_year, owner, stable) values ('El Caballo de Dios', 'el-caballo-de-dios', 2021, 'Amilcar Chacin', 'La Humildad') on conflict (slug) do update set name = excluded.name, owner = excluded.owner, stable = excluded.stable;
 insert into public.horses (name, slug, birth_year, owner, stable) values ('Pelo Rubio', 'pelo-rubio', 2021, 'Luis Tovar', 'CLS Stable') on conflict (slug) do update set name = excluded.name, owner = excluded.owner, stable = excluded.stable;
 insert into public.horses (name, slug, birth_year, owner, stable) values ('Princesa Bianca', 'princesa-bianca', 2021, 'Rougned Odor', 'Los Tipos Ranch') on conflict (slug) do update set name = excluded.name, owner = excluded.owner, stable = excluded.stable;
+insert into public.horses (name, slug, birth_year, owner, stable) values ('Sombrero Negro', 'sombrero-negro-2', 2021, 'Centro Genetico', 'FB') on conflict (slug) do update set name = excluded.name, owner = excluded.owner, stable = excluded.stable;
 insert into public.horses (name, slug, birth_year, owner, stable) values ('Tap Ichi', 'tap-ichi', 2021, 'Yoiner Navas', 'Cielo Abierto Ranch') on conflict (slug) do update set name = excluded.name, owner = excluded.owner, stable = excluded.stable;
 insert into public.horses (name, slug, birth_year, owner, stable) values ('Candelaria', 'candelaria', 2021, 'Agrop. La Gloria de Dios', 'La Gloria de Dios') on conflict (slug) do update set name = excluded.name, owner = excluded.owner, stable = excluded.stable;
 insert into public.horses (name, slug, birth_year, owner, stable) values ('La Diablita', 'la-diablita', 2021, 'Agrop. La Union', 'Agrop. La Union') on conflict (slug) do update set name = excluded.name, owner = excluded.owner, stable = excluded.stable;
@@ -81,6 +82,7 @@ insert into public.horses (name, slug, birth_year, owner, stable) values ('Maria
 insert into public.horses (name, slug, birth_year, owner, stable) values ('RPG', 'rpg', 2021, 'Guillermo Stuve', 'Dominguera Ranch') on conflict (slug) do update set name = excluded.name, owner = excluded.owner, stable = excluded.stable;
 insert into public.horses (name, slug, birth_year, owner, stable) values ('Caudillo', 'caudillo', 2021, 'Victor Alvarez', 'Toro Gallo Ranch') on conflict (slug) do update set name = excluded.name, owner = excluded.owner, stable = excluded.stable;
 insert into public.horses (name, slug, birth_year, owner, stable) values ('Coqueta Cat', 'coqueta-cat', 2021, 'Gustavo Hernandez', 'CR Carlos Ramos') on conflict (slug) do update set name = excluded.name, owner = excluded.owner, stable = excluded.stable;
+insert into public.horses (name, slug, birth_year, owner, stable) values ('Danto', 'danto-2', 2021, 'Jaime Asuaje', 'El Saman') on conflict (slug) do update set name = excluded.name, owner = excluded.owner, stable = excluded.stable;
 insert into public.horses (name, slug, birth_year, owner, stable) values ('Falso Abierto', 'falso-abierto', 2021, 'Ekker Herrera', 'Dinastia Vargas') on conflict (slug) do update set name = excluded.name, owner = excluded.owner, stable = excluded.stable;
 insert into public.horses (name, slug, birth_year, owner, stable) values ('Lady Di', 'lady-di', 2021, 'La Milenaria', 'La Milenaria') on conflict (slug) do update set name = excluded.name, owner = excluded.owner, stable = excluded.stable;
 insert into public.horses (name, slug, birth_year, owner, stable) values ('Maria Ines', 'maria-ines', 2021, 'Yurby Falcon', 'RP') on conflict (slug) do update set name = excluded.name, owner = excluded.owner, stable = excluded.stable;
@@ -242,6 +244,7 @@ from (values
   ('pelo-rubio', 99, 'Carlos Sequera', 2, 0, 2, null, 2),
   ('princesa-bianca', 100, 'Juan Niño', 2, 0, 0, 2, null),
   ('princesa-gun', 101, 'Alejandro Milano', 2, 0, 0, 2, null),
+  ('sombrero-negro-2', 102, 'Freddy Borrego', 2, 1, 0, 2, null),
   ('tap-ichi', 103, 'Josue Mendoza', 2, 1, 0, 2, null),
   ('candelaria', 104, 'Anibal Perez / Santiago Otero', 2, 2, 1, 4, -2),
   ('la-diablita', 105, 'Rogelio Santana', 2, 2, 1, null, 2),
@@ -251,6 +254,7 @@ from (values
   ('rpg', 109, 'Jhonathan Diaz', 2, 3, 1, 0, 2),
   ('caudillo', 110, 'Luis Rodriguez', 1, 0, 0, 1, null),
   ('coqueta-cat', 111, 'Carlos Luis Sequera', 1, 0, 0, 1, null),
+  ('danto-2', 112, 'Jaime Asuaje', 1, 0, 0, 1, null),
   ('falso-abierto', 113, 'Daniel Vargas', 1, 0, 0, 1, null),
   ('lady-di', 114, 'Lucas Velazquez', 1, 0, 0, 1, null),
   ('maria-ines', 115, 'Isaac Falcon', 1, 0, 0, 1, null),
@@ -369,12 +373,14 @@ from (values
   ('la-cobra', 3, 1, 0),
   ('princesa-bianca', 2, 0, 0),
   ('princesa-gun', 2, 0, 0),
+  ('sombrero-negro-2', 2, 1, 0),
   ('tap-ichi', 2, 1, 0),
   ('candelaria', 4, 0, 0),
   ('paris', 2, 2, 1),
   ('rpg', 0, 1, 1),
   ('caudillo', 1, 0, 0),
   ('coqueta-cat', 1, 0, 0),
+  ('danto-2', 1, 0, 0),
   ('falso-abierto', 1, 0, 0),
   ('lady-di', 1, 0, 0),
   ('maria-ines', 1, 0, 0),

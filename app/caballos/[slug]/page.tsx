@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { SingleHorse } from '@/components/HorseMark';
+import { LogoHorses } from '@/components/HorseMark';
 import { getHorse, type CompetitionEvent, type EventResult } from '@/lib/data';
 import { eventDates, ordinal, pad, STAGE_LABEL, STATUS_LABEL } from '@/lib/format';
 
@@ -47,7 +47,7 @@ export default async function HorsePage({ params }: Params) {
           <article className="ficha">
             <div className="ficha__photo glow">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              {horse.photo_url ? <img src={horse.photo_url} alt={horse.name} /> : <SingleHorse />}
+              {horse.photo_url ? <img src={horse.photo_url} alt={horse.name} /> : <LogoHorses />}
               <span className="ficha__year">{horse.birth_year}</span>
             </div>
 

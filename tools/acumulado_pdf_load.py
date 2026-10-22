@@ -56,10 +56,14 @@ for r in rows:
         slug = slugify(title(r['equino']))
         if slug in seen and seen[slug]['owner_n'] != norm(owner):
             slug = f"{slug}-{slugify(stable)}"  # mismo nombre, otro caballo
-    if slug in seen:
-        if seen[slug]['owner_n'] == norm(owner):
-            dupes.append((r['n'], r['equino'], seen[slug]['n']))
-            continue
+    if slug in seen and seen[slug]['owner_n'] == norm(owner):
+        # mismo nombre y propietario pero es otro caballo (confirmado por la organización)
+        dupes.append((r['n'], r['equino'], seen[slug]['n']))
+        h = None
+        k = 2
+        while f'{slug}-{k}' in seen:
+            k += 1
+        slug = f'{slug}-{k}'
     seen[slug] = {'n': r['n'], 'owner_n': norm(owner)}
     if h:
         matched.append((r['n'], r['equino'], h['name']))
@@ -106,5 +110,5 @@ print('filas válidas', len(rows), '| en ranking', len(entries))
 print('coinciden con caballos existentes:', len(matched))
 for m in matched: print('   ', m)
 print('caballos nuevos:', len(created))
-print('duplicados en el PDF (mismo nombre y propietario, se deja el primero):', dupes)
+print('mismo nombre y propietario, cargados como caballos distintos:', dupes)
 print('mismo nombre, otro caballo:', [c for c in created if c[0].count('-') and any(c[0].startswith(x + '-') for x in ('heredera',))])

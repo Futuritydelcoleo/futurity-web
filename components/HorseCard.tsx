@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { SingleHorse } from './HorseMark';
+import { LogoHorses } from './HorseMark';
 import { pad } from '@/lib/format';
 
 type Props = {
@@ -18,7 +18,7 @@ export function HorseCard({ slug, name, owner, stable, registrationCode, photoUr
     <Link href={`/caballos/${slug}`} className="horse-card">
       <div className="horse-card__photo">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        {photoUrl ? <img src={photoUrl} alt={name} /> : <SingleHorse />}
+        {photoUrl ? <img src={photoUrl} alt={name} /> : <LogoHorses />}
       </div>
       {position !== undefined && <span className="horse-card__pos">{pad(position)}</span>}
       {registrationCode && <span className="horse-card__id">ID {registrationCode}</span>}
