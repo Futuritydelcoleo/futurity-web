@@ -3,99 +3,113 @@
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 import logo from '@/public/brand/logo-futurity.png';
+import { RIG, type RigPiece } from './heroRig';
 
-// Intro del hero: la yegua y el potro del escudo entran galopando (patas
-// articuladas con muslo y caña), se forma el disco y el anillo, y la escena
-// termina en el logo oficial. Todo usa el encuadre 602×602 del logo, así la
-// silueta del cuerpo cae exacta sobre el logo al final.
+// Intro del hero: primero entra la yegua galopando y detrás el potro; frenan,
+// pasan del galope al paso y se detienen exactamente en la pose del escudo; se
+// forma el disco y el anillo y la escena termina en el logo oficial.
 //
-// La secuencia arranca solo cuando la silueta ya cargó (o tras un tiempo
-// límite), y las patas se mueven con requestAnimationFrame para que el galope
-// vaya siempre sincronizado con el desplazamiento, en cualquier navegador.
+// Las piezas (cuerpos, muslos y cañas) están cortadas del propio logo
+// (components/heroRig.ts, encuadre 602×602): con todos los ángulos en 0 la
+// silueta es idéntica al logo, así el cambio final no se nota.
 
-const HORSES_SRC = '/brand/horses-white.png';
-const START_TIMEOUT_MS = 2500;
+type Joint = { piece: string; px: number; py: number };
+type LegDef = { upper: Joint | 'mare-thigh-l' | 'mare-thigh-r'; lower: Joint; kind: 'front' | 'hind'; phase: number; amp: number };
 
-// Zona del cuerpo que se conserva de la silueta (sin patas ni línea de tierra).
-const BODY_CLIP =
-  '100,150 510,150 510,245 468,245 404,304 400,320 342,322 338,316 312,316 312,346 262,346 262,360 150,360 150,350 100,350';
-
-// Ciclo de galope. Ángulo > 0 lleva el casco hacia atrás: el caballo avanza a la derecha.
+// Ciclo de galope. Ángulo > 0 lleva el casco hacia atrás (avanzan hacia la derecha).
 type Track = { t: number[]; upper: number[]; lower: number[] };
 const GAIT: Record<'front' | 'hind', Track> = {
-  front: { t: [0, 0.25, 0.5, 0.72, 0.88, 1], upper: [-38, -8, 28, 14, -30, -38], lower: [-4, 0, 14, 118, 40, -4] },
-  hind: { t: [0, 0.18, 0.45, 0.62, 0.82, 1], upper: [34, 20, -34, -28, 4, 34], lower: [8, -78, -30, 6, 0, 8] },
+  front: { t: [0, 0.25, 0.5, 0.7, 0.85, 1], upper: [-30, -5, 25, 15, -20, -30], lower: [0, 0, 10, 100, 35, 0] },
+  hind: { t: [0, 0.2, 0.45, 0.62, 0.82, 1], upper: [28, 15, -28, -22, 5, 28], lower: [0, -70, -25, 5, 0, 0] },
 };
-const STRIDE_S = 0.4;
-const RUN_S = 1.6; // igual que la animación CSS intro-run
 
-type LegDef = { x: number; y: number; upper: number; lower: number; w: number; kind: 'front' | 'hind'; phase: number; layer: 'back' | 'front' };
+// Muslos traseros de la yegua: en el logo los tapa el potro, así que se dibujan.
+const MARE_THIGH = {
+  'mare-thigh-l': { hip: [200, 316], hock: [212, 369], w0: 32, w1: 15 },
+  'mare-thigh-r': { hip: [226, 316], hock: [240, 366], w0: 32, w1: 15 },
+} as const;
 
-const LEGS: LegDef[] = [
-  // yegua: patas traseras (detrás del potro)
-  { x: 200, y: 312, upper: 58, lower: 50, w: 30, kind: 'hind', phase: 0.05, layer: 'back' },
-  { x: 224, y: 312, upper: 58, lower: 50, w: 30, kind: 'hind', phase: 0.12, layer: 'back' },
-  // yegua: manos
-  { x: 360, y: 316, upper: 54, lower: 50, w: 22, kind: 'front', phase: 0.2, layer: 'front' },
-  { x: 380, y: 316, upper: 54, lower: 50, w: 22, kind: 'front', phase: 0.27, layer: 'front' },
-  // potro
-  { x: 160, y: 348, upper: 36, lower: 34, w: 17, kind: 'hind', phase: 0.1, layer: 'front' },
-  { x: 175, y: 348, upper: 36, lower: 34, w: 17, kind: 'hind', phase: 0.17, layer: 'front' },
-  { x: 284, y: 342, upper: 36, lower: 36, w: 13, kind: 'front', phase: 0.25, layer: 'front' },
-  { x: 298, y: 342, upper: 36, lower: 36, w: 13, kind: 'front', phase: 0.32, layer: 'front' },
+const MARE_LEGS: LegDef[] = [
+  { upper: 'mare-thigh-l', lower: { piece: 'mare_hl_lower', px: 212, py: 369 }, kind: 'hind', phase: 0, amp: 1 },
+  { upper: 'mare-thigh-r', lower: { piece: 'mare_hr_lower', px: 240, py: 366 }, kind: 'hind', phase: 0.1, amp: 1 },
+  { upper: { piece: 'mare_fl_upper', px: 360, py: 322 }, lower: { piece: 'mare_fl_lower', px: 357, py: 375 }, kind: 'front', phase: 0.45, amp: 1 },
+  { upper: { piece: 'mare_fr_upper', px: 383, py: 322 }, lower: { piece: 'mare_fr_lower', px: 384, py: 378 }, kind: 'front', phase: 0.55, amp: 1 },
 ];
 
-function sample(times: number[], values: number[], p: number): number {
+const FOAL_LEGS: LegDef[] = [
+  { upper: { piece: 'foal_hb_upper', px: 186, py: 350 }, lower: { piece: 'foal_hb_lower', px: 146, py: 386 }, kind: 'hind', phase: 0, amp: 0.75 },
+  { upper: { piece: 'foal_hf_upper', px: 198, py: 352 }, lower: { piece: 'foal_hf_lower', px: 172, py: 378 }, kind: 'hind', phase: 0.1, amp: 0.85 },
+  { upper: { piece: 'foal_ff1_upper', px: 276, py: 348 }, lower: { piece: 'foal_ff1_lower', px: 296, py: 380 }, kind: 'front', phase: 0.45, amp: 0.85 },
+  { upper: { piece: 'foal_ff2_upper', px: 288, py: 350 }, lower: { piece: 'foal_ff2_lower', px: 313, py: 364 }, kind: 'front', phase: 0.55, amp: 0.75 },
+];
+
+// Vientre y anca de la yegua que en el logo quedan detrás del potro.
+const MARE_HIDDEN =
+  '176,288 177,318 181,329 188,337 198,343 226,347 252,342 290,333 340,327 346,318 346,300 330,252 282,246 240,262 200,272';
+
+// Coreografía (segundos desde que arranca)
+const MARE_RUN = { start: 0, dur: 1.8 };
+const FOAL_RUN = { start: 0.35, dur: 1.75 };
+const SETTLE = 0.55; // últimos segundos del recorrido: el galope se apaga hasta la pose del logo
+const HIDDEN_FADE = { start: 1.75, end: 2.05 };
+const START_TIMEOUT_MS = 2500;
+
+const sample = (times: number[], values: number[], p: number) => {
   for (let i = 1; i < times.length; i++) {
-    if (p <= times[i]) {
-      const k = (p - times[i - 1]) / (times[i] - times[i - 1]);
-      return values[i - 1] + (values[i] - values[i - 1]) * k;
-    }
+    if (p <= times[i]) return values[i - 1] + ((values[i] - values[i - 1]) * (p - times[i - 1])) / (times[i] - times[i - 1]);
   }
   return values[values.length - 1];
-}
+};
+const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
+const easeOut = (k: number) => 1 - Math.pow(1 - k, 3);
+const smooth = (k: number) => k * k * (3 - 2 * k);
 
-/** Segmento cónico con extremos redondeados (ancho w0 arriba, w1 abajo). */
-function Segment({ len, w0, w1 }: { len: number; w0: number; w1: number }) {
-  return (
-    <>
-      <path d={`M${-w0 / 2} 0 L${w0 / 2} 0 L${w1 / 2} ${len} L${-w1 / 2} ${len} Z`} />
-      <circle r={w0 / 2} />
-      <circle cy={len} r={w1 / 2} />
-    </>
-  );
+function Piece({ p }: { p: RigPiece }) {
+  // eslint-disable-next-line jsx-a11y/alt-text
+  return <image href={p.src} x={p.x} y={p.y} width={p.w} height={p.h} />;
 }
 
 type LegRefs = { upper: SVGGElement | null; lower: SVGGElement | null };
 
 function Leg({ leg, refs }: { leg: LegDef; refs: LegRefs }) {
-  const knee = leg.w * 0.5;
-  const hoof = leg.w * 0.42;
-  // pose inicial = la del instante 0 del galope (así nunca se ven las patas rectas)
-  const p0 = leg.phase % 1;
-  const g = GAIT[leg.kind];
+  const up = leg.upper;
+  const thigh = typeof up === 'string' ? MARE_THIGH[up] : null;
   return (
-    <g transform={`translate(${leg.x} ${leg.y})`} className="leg">
-      <g ref={(el) => { refs.upper = el; }} transform={`rotate(${sample(g.t, g.upper, p0)})`}>
-        <Segment len={leg.upper} w0={leg.w} w1={knee} />
-        <g transform={`translate(0 ${leg.upper})`}>
-          <g ref={(el) => { refs.lower = el; }} transform={`rotate(${sample(g.t, g.lower, p0)})`}>
-            <Segment len={leg.lower} w0={knee} w1={hoof * 0.8} />
-            <path d={`M${-hoof * 0.55} ${leg.lower - 1} L${hoof * 0.7} ${leg.lower - 1} L${hoof * 0.9} ${leg.lower + hoof * 0.7} L${-hoof * 0.6} ${leg.lower + hoof * 0.7} Z`} />
-          </g>
-        </g>
+    <g ref={(el) => { refs.upper = el; }}>
+      {thigh ? (
+        <path
+          className="rig-rebuilt"
+          d={(() => {
+            const [hx, hy] = thigh.hip; const [kx, ky] = thigh.hock;
+            return `M${hx - thigh.w0 / 2} ${hy} L${hx + thigh.w0 / 2} ${hy} L${kx + thigh.w1 / 2} ${ky + 2} L${kx - thigh.w1 / 2} ${ky + 2} Z`;
+          })()}
+        />
+      ) : (
+        <Piece p={RIG[(up as Joint).piece]} />
+      )}
+      <g ref={(el) => { refs.lower = el; }}>
+        <Piece p={RIG[leg.lower.piece]} />
       </g>
     </g>
   );
 }
 
+function pivotOf(leg: LegDef): [number, number] {
+  return typeof leg.upper === 'string' ? (MARE_THIGH[leg.upper].hip as unknown as [number, number]) : [leg.upper.px, leg.upper.py];
+}
+
 export function HeroIntro() {
   const rootRef = useRef<HTMLDivElement>(null);
-  const bobRef = useRef<SVGGElement>(null);
-  const legRefs = useRef<LegRefs[]>(LEGS.map(() => ({ upper: null, lower: null })));
+  const mareRef = useRef<HTMLDivElement>(null);
+  const foalRef = useRef<HTMLDivElement>(null);
+  const mareBob = useRef<SVGGElement>(null);
+  const foalBob = useRef<SVGGElement>(null);
+  const hiddenRef = useRef<SVGGElement>(null);
+  const mareLegs = useRef<LegRefs[]>(MARE_LEGS.map(() => ({ upper: null, lower: null })));
+  const foalLegs = useRef<LegRefs[]>(FOAL_LEGS.map(() => ({ upper: null, lower: null })));
   const [playing, setPlaying] = useState(false);
 
-  // 1) Esperar a que la silueta esté lista (o al tiempo límite) y arrancar todo a la vez.
+  // Arrancar cuando las piezas (data URI) y el logo estén listos, con tiempo límite.
   useEffect(() => {
     let done = false;
     const start = () => {
@@ -104,31 +118,67 @@ export function HeroIntro() {
       setPlaying(true);
       rootRef.current?.closest('.hero')?.classList.add('hero--play');
     };
-    const img = new window.Image();
-    img.src = HORSES_SRC;
-    img.decode().then(start, start);
+    const imgs = rootRef.current ? [...rootRef.current.querySelectorAll('image')] : [];
+    Promise.all(
+      imgs.map((el) => {
+        const i = new window.Image();
+        i.src = el.getAttribute('href') ?? '';
+        return i.decode().catch(() => undefined);
+      }),
+    ).then(start);
     const timer = window.setTimeout(start, START_TIMEOUT_MS);
     return () => window.clearTimeout(timer);
   }, []);
 
-  // 2) Galope: mover cada articulación cuadro a cuadro mientras corre.
   useEffect(() => {
     if (!playing) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const size = rootRef.current?.getBoundingClientRect().width ?? 230;
+    const distance = window.innerWidth * 0.8; // recorrido de entrada en px
+
+    const animateHorse = (
+      t: number,
+      run: { start: number; dur: number },
+      layer: HTMLDivElement | null,
+      bob: SVGGElement | null,
+      legs: LegDef[],
+      refs: LegRefs[],
+      stride: number,
+    ) => {
+      const k = clamp01((t - run.start) / run.dur);
+      const travelled = distance * easeOut(k);
+      if (layer) layer.style.transform = `translateX(${(travelled - distance).toFixed(1)}px)`;
+      // el galope se apaga en el tramo final hasta quedar en la pose del logo
+      const remaining = run.start + run.dur - t;
+      const amp = t < run.start ? 1 : smooth(clamp01(remaining / SETTLE));
+      const cycles = travelled / stride; // las patas avanzan con la distancia: sin "patinar"
+      legs.forEach((leg, i) => {
+        const g = GAIT[leg.kind];
+        const p = (((cycles + leg.phase) % 1) + 1) % 1;
+        const a = sample(g.t, g.upper, p) * amp * leg.amp;
+        const b = sample(g.t, g.lower, p) * amp * leg.amp;
+        const [px, py] = pivotOf(leg);
+        refs[i].upper?.setAttribute('transform', `rotate(${a.toFixed(2)} ${px} ${py})`);
+        refs[i].lower?.setAttribute('transform', `rotate(${b.toFixed(2)} ${leg.lower.px} ${leg.lower.py})`);
+      });
+      const lift = Math.sin(cycles * Math.PI * 2) * -7 * amp;
+      bob?.setAttribute('transform', `translate(0 ${lift.toFixed(2)})`);
+    };
+
     let raf = 0;
     const t0 = performance.now();
+    const end = Math.max(MARE_RUN.start + MARE_RUN.dur, FOAL_RUN.start + FOAL_RUN.dur, HIDDEN_FADE.end);
+    // ?introFrame=1.2 congela la escena en ese segundo (para revisar cuadro a cuadro)
+    const frozen = Number(new URLSearchParams(window.location.search).get('introFrame'));
     const tick = (now: number) => {
-      const t = Math.min((now - t0) / 1000, RUN_S);
-      LEGS.forEach((leg, i) => {
-        const g = GAIT[leg.kind];
-        const p = ((t / STRIDE_S + leg.phase) % 1 + 1) % 1;
-        legRefs.current[i].upper?.setAttribute('transform', `rotate(${sample(g.t, g.upper, p).toFixed(2)})`);
-        legRefs.current[i].lower?.setAttribute('transform', `rotate(${sample(g.t, g.lower, p).toFixed(2)})`);
-      });
-      // el cuerpo sube y baja con cada tranco
-      const bob = Math.sin((t / STRIDE_S) * Math.PI * 2) * -6;
-      bobRef.current?.setAttribute('transform', `translate(0 ${bob.toFixed(2)})`);
-      if (t < RUN_S) raf = requestAnimationFrame(tick);
+      const t = frozen > 0 ? frozen : Math.min((now - t0) / 1000, end);
+      // tranco: la yegua cubre más terreno por ciclo; el potro da pasos más cortos y rápidos
+      animateHorse(t, MARE_RUN, mareRef.current, mareBob.current, MARE_LEGS, mareLegs.current, size * 0.95);
+      animateHorse(t, FOAL_RUN, foalRef.current, foalBob.current, FOAL_LEGS, foalLegs.current, size * 0.62);
+      // lo reconstruido de la yegua desaparece justo cuando el potro lo tapa
+      const hide = clamp01((t - HIDDEN_FADE.start) / (HIDDEN_FADE.end - HIDDEN_FADE.start));
+      hiddenRef.current?.setAttribute('opacity', (1 - hide).toFixed(3));
+      if (!frozen && t < end) raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
@@ -146,22 +196,34 @@ export function HeroIntro() {
         <circle className="intro__stroke" cx="50" cy="50" r="48.5" pathLength="100" />
       </svg>
 
-      <div className="intro__run" aria-hidden>
+      {/* Yegua (detrás) */}
+      <div ref={mareRef} className="intro__horse" aria-hidden>
         <svg className="intro__horses" viewBox="0 0 602 602">
-          <defs>
-            <clipPath id="intro-body">
-              <polygon points={BODY_CLIP} />
-            </clipPath>
-          </defs>
-          <g ref={bobRef}>
-            {LEGS.map((leg, i) => (leg.layer === 'back' ? <Leg key={i} leg={leg} refs={legRefs.current[i]} /> : null))}
-            <image href={HORSES_SRC} width="602" height="602" clipPath="url(#intro-body)" />
-            {LEGS.map((leg, i) => (leg.layer === 'front' ? <Leg key={i} leg={leg} refs={legRefs.current[i]} /> : null))}
+          <g ref={mareBob}>
+            <g ref={hiddenRef}>
+              <polygon className="rig-rebuilt" points={MARE_HIDDEN} />
+            </g>
+            {MARE_LEGS.map((leg, i) => (
+              <Leg key={i} leg={leg} refs={mareLegs.current[i]} />
+            ))}
+            <Piece p={RIG.mare_body} />
           </g>
         </svg>
       </div>
 
-      <Image src={logo} alt="" priority sizes="240px" className="intro__logo" />
+      {/* Potro (delante) */}
+      <div ref={foalRef} className="intro__horse" aria-hidden>
+        <svg className="intro__horses" viewBox="0 0 602 602">
+          <g ref={foalBob}>
+            {FOAL_LEGS.map((leg, i) => (
+              <Leg key={i} leg={leg} refs={foalLegs.current[i]} />
+            ))}
+            <Piece p={RIG.foal_body} />
+          </g>
+        </svg>
+      </div>
+
+      <Image src={logo} alt="" priority sizes="280px" className="intro__logo" />
     </div>
   );
 }
