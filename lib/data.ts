@@ -48,7 +48,29 @@ export type EventResult = {
   pts_sp: number;
 };
 
-export type Sponsor = { id: string; name: string; tier: string; logo_url: string | null; website: string | null };
+export type Video = {
+  youtube_id: string;
+  title: string;
+  kind: 'dia' | 'sorteo' | 'resumen' | 'otro';
+  published_on: string | null;
+};
+
+export type EventWithVideos = CompetitionEvent & { videos: Video[] };
+
+/** Válidas de la temporada con sus transmisiones, en orden CF1 → CF2 → Futurity. */
+export async function getSeasonVideos(season: number): Promise<EventWithVideos[]> {
+  const rows = check(
+    await supabase
+      .from('events')
+      .select('*, videos(youtube_id, title, kind, published_on, sort_order)')
+      .eq('season', season)
+      .order('sort_order', { referencedTable: 'videos' }),
+  ) as EventWithVideos[];
+  const order: Stage[] = ['cf1', 'cf2', 'futurity'];
+  return rows.sort((a, b) => order.indexOf(a.stage) - order.indexOf(b.stage));
+}
+
+export type Sponsor ={ id: string; name: string; tier: string; logo_url: string | null; website: string | null };
 
 export type Generation = { birth_year: number; title: string; notes: string | null; horses: number };
 
