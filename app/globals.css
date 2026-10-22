@@ -469,6 +469,7 @@ img, svg { display: block; max-width: 100%; }
 .ranking .equino a:hover { color: var(--green-600); text-decoration: underline; }
 .ranking .pts { font-family: var(--font-condensed); font-weight: 700; font-size: 20px; }
 .ranking .pts--main { color: var(--green-700); font-size: 24px; }
+.ranking .pts--stage { font-size: 16px; color: #4b6650; font-weight: 600; }
 .ranking tr.top-1 td { background: linear-gradient(90deg, #fff6c7, var(--paper) 60%); }
 .ranking tr.top-1 .pos { color: #b8860b; }
 .ranking-cards { display: none; }
@@ -482,8 +483,10 @@ img, svg { display: block; max-width: 100%; }
   .rank-card .sub { font-size: 13px; color: #4b6650; }
   .rank-card .pts { text-align: right; font-family: var(--font-condensed); font-weight: 700; }
   .rank-card .pts b { display: block; font-size: 26px; color: var(--green-700); line-height: 1; }
+  .rank-card .pts-split { display: block; font-size: 12px; color: #4b6650; white-space: nowrap; }
 }
-.legend { margin-top: 18px; font-size: 14px; color: var(--muted); }
+.legend { margin-top: 18px; font-size: 14px; color: var(--muted); line-height: 1.6; }
+.legend b { color: var(--text); font-weight: 600; }
 .empty { padding: 32px; text-align: center; color: var(--muted); border: 1px dashed var(--line); border-radius: var(--radius); }
 
 /* ───────── Ficha del caballo ───────── */

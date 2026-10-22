@@ -48,9 +48,11 @@ export function RankingTable({ rows }: { rows: Standing[] }) {
                 <th>Propietario</th>
                 <th>Atleta</th>
                 <th>Caballeriza</th>
-                <th className="num">E.</th>
-                <th className="num">N.</th>
-                <th className="num">S.P.</th>
+                <th className="num" title="Puntos en el Caballo del Futuro I">CF1</th>
+                <th className="num" title="Puntos en el Caballo del Futuro II">CF2</th>
+                <th className="num" title="Puntos acumulados">Pts</th>
+                <th className="num" title="Nulas">Nul.</th>
+                <th className="num" title="Saques de puerta">S.P.</th>
               </tr>
             </thead>
             <tbody>
@@ -63,6 +65,8 @@ export function RankingTable({ rows }: { rows: Standing[] }) {
                   <td>{r.horse.owner}</td>
                   <td>{r.athletes}</td>
                   <td>{r.horse.stable}</td>
+                  <td className="num pts pts--stage">{r.cf1_pts ?? '—'}</td>
+                  <td className="num pts pts--stage">{r.cf2_pts ?? '—'}</td>
                   <td className="num pts pts--main">{r.pts_e}</td>
                   <td className="num pts">{r.pts_n}</td>
                   <td className="num pts">{r.pts_sp}</td>
@@ -82,7 +86,12 @@ export function RankingTable({ rows }: { rows: Standing[] }) {
                 </span>
                 <span className="pts">
                   <b>{r.pts_e}</b>
-                  {r.pts_n} N · {r.pts_sp} S.P.
+                  <span className="pts-split">
+                    CF1 {r.cf1_pts ?? '—'} · CF2 {r.cf2_pts ?? '—'}
+                  </span>
+                  <span className="pts-split">
+                    {r.pts_n} Nul. · {r.pts_sp} S.P.
+                  </span>
                 </span>
               </Link>
             ))}

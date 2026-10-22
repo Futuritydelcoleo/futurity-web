@@ -28,7 +28,10 @@ export default async function RankingPage() {
           ) : (
             <div className="empty">El ranking de esta temporada se publicará al finalizar el Caballo del Futuro I.</div>
           )}
-          <p className="legend">E. · N. · S.P. según la planilla oficial de la organización.</p>
+          <p className="legend">
+            <b>CF1 / CF2:</b> puntos en cada válida (— = no la corrió) · <b>Pts:</b> puntos acumulados ·{' '}
+            <b>Nul.:</b> nulas · <b>S.P.:</b> saques de puerta. Datos según la planilla oficial de la organización.
+          </p>
         </div>
       </section>
     </>

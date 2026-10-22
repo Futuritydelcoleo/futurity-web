@@ -134,7 +134,7 @@ export default async function Home() {
                   name={s.horse.name}
                   owner={s.horse.owner}
                   position={s.position}
-                  extra={`${s.pts_e} E · ${s.pts_n} N · ${s.pts_sp} S.P.`}
+                  extra={`${s.pts_e} pts · CF1 ${s.cf1_pts ?? "—"} · CF2 ${s.cf2_pts ?? "—"}`}
                 />
               ))}
             </div>

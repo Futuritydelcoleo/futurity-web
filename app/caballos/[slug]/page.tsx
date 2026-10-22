@@ -15,12 +15,17 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   return { title: data ? data.horse.name : 'Caballo no encontrado' };
 }
 
+const plural = (n: number, one: string, many: string) => `${n} ${Math.abs(n) === 1 ? one : many}`;
+
 function stepResult(event: CompetitionEvent, result: EventResult | undefined) {
+  const detail = result
+    ? `${plural(result.pts_n, 'nula', 'nulas')} · ${plural(result.pts_sp, 'saque de puerta', 'saques de puerta')}`
+    : null;
   if (result?.position) {
-    return { text: `${ordinal(result.position)} lugar`, tone: result.position <= 3 ? 'gold' : '' };
+    return { text: `${ordinal(result.position)} lugar · ${plural(result.pts_e, 'punto', 'puntos')}`, tone: result.position <= 3 ? 'gold' : '', detail };
   }
-  if (result) return { text: 'Participó', tone: '' };
-  if (event.status === 'finalizada') return { text: 'Resultado por cargar', tone: 'pending' };
+  if (result) return { text: plural(result.pts_e, 'punto', 'puntos'), tone: '', detail };
+  if (event.status === 'finalizada') return { text: 'No corrió esta válida', tone: 'pending', detail };
   if (event.status === 'en_curso') return { text: 'En competencia', tone: 'gold' };
   return { text: 'Por correr', tone: 'pending' };
 }
@@ -66,9 +71,9 @@ export default async function HorsePage({ params }: Params) {
                   <span className="ficha__planilla">Acumulativo CF1 / CF2 · {standing.season}</span>
                   <div className="acumulado" style={{ marginTop: 10 }}>
                     <div><b>{pad(standing.position)}</b><span>Posición</span></div>
-                    <div><b>{standing.pts_e}</b><span>E.</span></div>
-                    <div><b>{standing.pts_n}</b><span>N.</span></div>
-                    <div><b>{standing.pts_sp}</b><span>S.P.</span></div>
+                    <div><b>{standing.pts_e}</b><span>Puntos</span></div>
+                    <div><b>{standing.pts_n}</b><span>Nulas</span></div>
+                    <div><b>{standing.pts_sp}</b><span>S. puerta</span></div>
                   </div>
                 </div>
               )}
@@ -95,6 +100,7 @@ export default async function HorsePage({ params }: Params) {
                     <span className="camino__stage">{STAGE_LABEL[e.stage]}</span>
                     <span className="muted">{eventDates(e, false)}</span>
                     <span className={`camino__result ${r.tone ? `camino__result--${r.tone}` : ''}`}>{r.text}</span>
+                    {r.detail && <span className="muted">{r.detail}</span>}
                     {result?.athlete && <span className="muted">Atleta: {result.athlete}</span>}
                     <span className={`badge badge--${e.status}`} style={{ width: 'fit-content' }}>
                       {STATUS_LABEL[e.status]}

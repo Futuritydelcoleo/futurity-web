@@ -30,12 +30,16 @@ export type CompetitionEvent = {
   live_url: string | null;
 };
 
+/** Fila del acumulado. pts_e = puntos, pts_n = nulas, pts_sp = saques de puerta;
+ *  cf1_pts / cf2_pts = puntos de cada válida (null si no la corrió). */
 export type Standing = {
   position: number;
   athletes: string | null;
   pts_e: number;
   pts_n: number;
   pts_sp: number;
+  cf1_pts: number | null;
+  cf2_pts: number | null;
   horse: Pick<Horse, 'name' | 'slug' | 'owner' | 'stable' | 'registration_code'>;
 };
 
@@ -129,7 +133,7 @@ export async function getStandings(season: number): Promise<Standing[]> {
   const rows = check(
     await supabase
       .from('standings')
-      .select('position, athletes, pts_e, pts_n, pts_sp, horse:horses(name, slug, owner, stable, registration_code)')
+      .select('position, athletes, pts_e, pts_n, pts_sp, cf1_pts, cf2_pts, horse:horses(name, slug, owner, stable, registration_code)')
       .eq('season', season)
       .order('position'),
   );
