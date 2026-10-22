@@ -23,6 +23,8 @@ export default async function Home() {
   const competingYear = next?.birth_year ?? season - 5;
   const competing = generations.find((g) => g.birth_year === competingYear);
   const top = standings.slice(0, 5);
+  // Generaciones que ya corrieron su Futurity (la primera edición, 2022, fue la generación 2017)
+  const past = generations.filter((g) => g.birth_year < competingYear);
 
   return (
     <>
@@ -162,6 +164,24 @@ export default async function Home() {
                 Ver caballos
               </Link>
             </div>
+
+            {past.length > 0 && (
+              <>
+                <h3 className="past-gens__title">Generaciones anteriores</h3>
+                <div className="past-gens">
+                  {past.map((g) => (
+                    <Link key={g.birth_year} href={`/generaciones/${g.birth_year}`} className="past-gen">
+                      <span className="past-gen__year">{g.birth_year}</span>
+                      <span className="past-gen__meta">
+                        Futurity {g.birth_year + 5}
+                        {g.birth_year === 2017 ? ' · 1.ª edición' : ''}
+                      </span>
+                      <span className="past-gen__cta">Ver generación →</span>
+                    </Link>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </section>
       )}

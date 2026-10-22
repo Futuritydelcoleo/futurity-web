@@ -27,13 +27,19 @@ export default async function GenerationPage({ params }: Params) {
           <p className="kicker">Equinos nacidos en el año</p>
           <h1 className="display">{generation.birth_year}</h1>
           <p className="muted">
-            {generation.notes ?? ''} Compiten en la temporada {generation.birth_year + 5}.
+            {generation.notes ?? `Compiten en la temporada ${generation.birth_year + 5}.`}
           </p>
         </div>
       </section>
       <section className="section" style={{ paddingTop: 32 }}>
         <div className="wrap">
-          {horses.length ? <HorseGrid horses={horses} /> : <div className="empty">Aún no hay ejemplares registrados.</div>}
+          {horses.length ? <HorseGrid horses={horses} /> : (
+            <div className="empty">
+              {generation.birth_year + 5 < new Date().getFullYear()
+                ? `Estamos recopilando los ejemplares y resultados del Futurity ${generation.birth_year + 5}.`
+                : 'Aún no hay ejemplares registrados.'}
+            </div>
+          )}
         </div>
       </section>
     </>
