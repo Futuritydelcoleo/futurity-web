@@ -38,7 +38,8 @@ export default async function Home() {
           {next && (
             <div className="hero-reveal hero-reveal--2">
               <div className="hero-event">
-                <span className="hero-event__name">{next.name}</span>
+                {/* el título ya dice "Futurity del Coleo": el nombre solo se muestra para CF1/CF2 */}
+                {next.stage !== 'futurity' && <span className="hero-event__name">{next.name}</span>}
                 <span className="hero-event__dates">{eventDates(next)}</span>
                 {next.venue && (
                   <span className="hero-event__venue">
