@@ -13,6 +13,19 @@ export const metadata: Metadata = {
   title: { default: 'Futurity del Coleo', template: '%s · Futurity del Coleo' },
   description:
     'Futurity del Coleo: Caballo del Futuro I, Caballo del Futuro II y la gran final. Ranking, generaciones y la ficha de cada ejemplar.',
+  icons: {
+    icon: [
+      { url: '/brand/favicon-32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/brand/favicon-64.png', sizes: '64x64', type: 'image/png' },
+      { url: '/brand/icon-192.png', sizes: '192x192', type: 'image/png' },
+    ],
+    apple: '/brand/apple-touch-icon.png',
+  },
+  openGraph: {
+    siteName: 'Futurity del Coleo',
+    locale: 'es_VE',
+    images: [{ url: '/brand/logo-futurity-512.png', width: 512, height: 512 }],
+  },
 };
 
 export const viewport: Viewport = { themeColor: '#062a12' };

@@ -25,7 +25,7 @@ export default async function Home() {
     <>
       <section className="hero glow grain">
         <div className="wrap">
-          <Crest size={150} className="crest" />
+          <Crest size={170} className="crest" priority />
           <p className="kicker">Temporada {season} · Equinos nacidos en {competingYear}</p>
           <h1 className="display">
             Futurity
