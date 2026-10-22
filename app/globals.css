@@ -234,20 +234,24 @@ img, svg { display: block; max-width: 100%; }
 .hero .crest { margin: 0 auto 18px; filter: drop-shadow(0 0 40px rgba(143, 224, 58, 0.45)); }
 
 /* Intro animada: galope → disco → anillo → logo (≈3 s) */
+/* Estado inicial (antes de que cargue la silueta): todo oculto. La clase
+   .intro--play la pone HeroIntro cuando la imagen está lista. */
 .intro { --s: 230px; position: relative; width: var(--s); height: var(--s); margin: 0 auto 22px; }
-.intro__logo { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; animation: intro-logo 0.55s ease-out 1.75s forwards, intro-glow 3s ease-in-out 3s infinite; }
-.intro__run { position: absolute; inset: 0; animation: intro-run 1.6s cubic-bezier(0.2, 0.7, 0.35, 1) both, intro-out 0.45s ease 1.85s forwards; }
+.intro__logo { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; }
+.intro__run { position: absolute; inset: 0; opacity: 0; transform: translateX(-75vw); }
 .intro__horses { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-
-/* Galope: ciclo de 0,4 s; cada pata desfasada con animation-delay negativo */
-/* Galope: las patas giran con <animateTransform> (SVG) sobre cada articulación */
-.intro__bob { animation: gallop-bob 0.4s ease-in-out 4; }
 .leg { fill: #fff; }
-@keyframes gallop-bob { 0%, 100% { transform: translateY(0); } 30% { transform: translateY(-9px); } 65% { transform: translateY(3px); } }
 .intro__ring { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-.intro__disc { fill: var(--green-800); transform-origin: 50% 50%; transform: scale(0); animation: intro-disc 0.55s cubic-bezier(0.3, 1.4, 0.5, 1) 1.3s forwards; }
-.intro__stroke { fill: none; stroke: #fff; stroke-width: 3; stroke-dasharray: 100; stroke-dashoffset: 100; transform: rotate(-90deg); transform-origin: 50% 50%; animation: intro-draw 0.7s ease-in-out 1.45s forwards; }
-.intro__trail { position: absolute; top: 34%; right: 60%; width: 70vw; height: 40%; display: grid; align-content: space-around; pointer-events: none; opacity: 0; animation: intro-trail 1.7s ease-out forwards; }
+.intro__disc { fill: var(--green-800); transform-origin: 50% 50%; transform: scale(0); }
+.intro__stroke { fill: none; stroke: #fff; stroke-width: 3; stroke-dasharray: 100; stroke-dashoffset: 100; transform: rotate(-90deg); transform-origin: 50% 50%; }
+.intro__trail { position: absolute; top: 34%; right: 60%; width: 70vw; height: 40%; display: grid; align-content: space-around; pointer-events: none; opacity: 0; }
+
+/* Secuencia (≈2,6 s); las patas las mueve HeroIntro cuadro a cuadro */
+.intro--play .intro__run { opacity: 1; animation: intro-run 1.6s cubic-bezier(0.2, 0.7, 0.35, 1) both, intro-out 0.45s ease 1.85s forwards; }
+.intro--play .intro__trail { animation: intro-trail 1.7s ease-out forwards; }
+.intro--play .intro__disc { animation: intro-disc 0.55s cubic-bezier(0.3, 1.4, 0.5, 1) 1.3s forwards; }
+.intro--play .intro__stroke { animation: intro-draw 0.7s ease-in-out 1.45s forwards; }
+.intro--play .intro__logo { animation: intro-logo 0.55s ease-out 1.75s forwards, intro-glow 3s ease-in-out 3s infinite; }
 .intro__trail span { display: block; height: 3px; border-radius: 3px; background: linear-gradient(90deg, transparent, var(--lime)); }
 .intro__trail span:nth-child(2) { margin-left: 25%; opacity: 0.7; }
 .intro__trail span:nth-child(3) { margin-left: 45%; opacity: 0.5; }
@@ -258,15 +262,17 @@ img, svg { display: block; max-width: 100%; }
 @keyframes intro-logo { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: none; } }
 @keyframes intro-out { to { opacity: 0; } }
 @keyframes intro-glow { 0%, 100% { filter: drop-shadow(0 0 24px rgba(143, 224, 58, 0.35)); } 50% { filter: drop-shadow(0 0 48px rgba(143, 224, 58, 0.6)); } }
-.hero-reveal { opacity: 0; animation: hero-reveal 0.7s ease-out forwards; }
-.hero-reveal--1 { animation-delay: 2.1s; }
-.hero-reveal--2 { animation-delay: 2.35s; }
-.hero-reveal--3 { animation-delay: 2.6s; }
+.hero-reveal { opacity: 0; }
+.hero--play .hero-reveal { animation: hero-reveal 0.7s ease-out forwards; }
+.hero--play .hero-reveal--1 { animation-delay: 2.1s; }
+.hero--play .hero-reveal--2 { animation-delay: 2.35s; }
+.hero--play .hero-reveal--3 { animation-delay: 2.6s; }
 @keyframes hero-reveal { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 @media (max-width: 520px) { .intro { --s: 180px; } }
+@media (min-width: 1024px) { .intro { --s: 280px; } }
 @media (prefers-reduced-motion: reduce) {
   .intro__run, .intro__ring, .intro__trail { display: none; }
-  .intro__logo, .hero-reveal { opacity: 1; animation: none; }
+  .intro__logo, .hero-reveal, .intro--play .intro__logo, .hero--play .hero-reveal { opacity: 1; animation: none; }
 }
 .hero h1 { font-size: clamp(56px, 13vw, 138px); }
 .hero h1 span { display: block; font-size: 0.55em; color: var(--white); opacity: 0.92; }
