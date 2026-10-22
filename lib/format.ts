@@ -38,6 +38,12 @@ export function ordinal(n: number): string {
   return `${n}.º`;
 }
 
+/** ID de un video a partir de cualquier enlace de YouTube (watch, youtu.be, /live/, /embed/). */
+export function youtubeVideoId(url: string): string | null {
+  const m = url.match(/(?:v=|youtu\.be\/|\/live\/|\/embed\/|\/shorts\/)([\w-]{11})/);
+  return m ? m[1] : null;
+}
+
 export function pad(n: number): string {
   return String(n).padStart(2, '0');
 }

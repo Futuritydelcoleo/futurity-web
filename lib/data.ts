@@ -64,6 +64,12 @@ export async function getSettings(): Promise<Record<string, unknown>> {
   return Object.fromEntries(rows.map((r) => [r.key, r.value]));
 }
 
+/** Lee un ajuste de texto; vacío o ausente devuelve el valor por defecto. */
+export function setting(settings: Record<string, unknown>, key: string, fallback = ''): string {
+  const v = settings[key];
+  return typeof v === 'string' && v.trim() ? v : fallback;
+}
+
 export async function getCurrentSeason(): Promise<number> {
   const settings = await getSettings();
   return Number(settings.current_season ?? new Date().getFullYear());

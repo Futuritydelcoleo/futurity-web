@@ -7,7 +7,7 @@ const NAV = [
   { href: '/generaciones', label: 'Generaciones' },
 ];
 
-export function Header({ liveUrl }: { liveUrl: string }) {
+export function Header() {
   return (
     <header className="site-header">
       <div className="wrap site-header__inner">
@@ -23,37 +23,81 @@ export function Header({ liveUrl }: { liveUrl: string }) {
               {n.label}
             </Link>
           ))}
-          <a className="btn btn--live btn--sm" href={liveUrl} target="_blank" rel="noreferrer">
+          <Link className="btn btn--live btn--sm" href="/en-vivo">
             <span className="live-dot" aria-hidden /> En vivo
-          </a>
+          </Link>
         </nav>
       </div>
     </header>
   );
 }
 
-export function Footer({ instagram, youtube }: { instagram: string; youtube: string }) {
+type FooterProps = {
+  instagram: string;
+  caballoDelFuturo: string;
+  youtube: string;
+  liveUrl: string;
+  email: string;
+  location: string;
+  venue: string | null;
+};
+
+export function Footer({ instagram, caballoDelFuturo, youtube, liveUrl, email, location, venue }: FooterProps) {
+  const year = new Date().getFullYear();
   return (
     <footer className="site-footer">
-      <div className="wrap site-footer__inner">
-        <div className="brand">
-          <Crest size={56} />
-          <span className="brand__name">
-            Futurity <small>del Coleo</small>
-          </span>
+      <div className="wrap">
+        <div className="footer-grid">
+          <div className="footer-brand">
+            <Link href="/" className="brand">
+              <Crest size={56} />
+              <span className="brand__name">
+                Futurity <small>del Coleo</small>
+              </span>
+            </Link>
+            <p className="muted">
+              El caballo es el protagonista. Competencia para equinos de 5 años, revisados y registrados por nuestro
+              equipo técnico de médicos veterinarios.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="footer-title">El Futurity</h3>
+            <ul className="footer-list">
+              <li><Link href="/en-vivo">Transmisión en vivo</Link></li>
+              <li><Link href="/ranking">Ranking acumulado</Link></li>
+              <li><Link href="/generaciones">Generaciones</Link></li>
+              <li><a href={liveUrl} target="_blank" rel="noreferrer">Resultados en Tiempo Vaquero</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="footer-title">Síguenos</h3>
+            <ul className="footer-list">
+              <li><a href={instagram} target="_blank" rel="noreferrer">Instagram @futuritydelcoleo_oficial</a></li>
+              <li><a href={caballoDelFuturo} target="_blank" rel="noreferrer">Instagram @caballodelfuturo_oficial</a></li>
+              <li><a href={youtube} target="_blank" rel="noreferrer">YouTube @futuritydelcoleo</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="footer-title">Contacto oficial</h3>
+            <ul className="footer-list">
+              {venue && <li className="muted">{venue}</li>}
+              <li className="muted">{location}</li>
+              <li><a className="footer-email" href={`mailto:${email}`}>{email}</a></li>
+            </ul>
+          </div>
         </div>
-        <p className="muted">
-          El caballo es el protagonista. Competencia para equinos de 5 años, revisados y registrados por nuestro equipo
-          técnico de médicos veterinarios.
-        </p>
-        <ul className="footer-links">
-          <li><a href={instagram} target="_blank" rel="noreferrer">Instagram</a></li>
-          <li><a href={youtube} target="_blank" rel="noreferrer">YouTube</a></li>
-          <li><a href="mailto:info@futuritydelcoleo.com">info@futuritydelcoleo.com</a></li>
-        </ul>
-        <p className="footer-credit">
-          Resultados en vivo por <a href="https://tiempovaquero.com" target="_blank" rel="noreferrer">Tiempo Vaquero</a>
-        </p>
+
+        <div className="footer-bottom">
+          <span>© {year} Futurity del Coleo. Todos los derechos reservados.</span>
+          <a href={liveUrl} target="_blank" rel="noreferrer" className="footer-tv">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/tiempo-vaquero.png" alt="" width={22} height={25} />
+            Resultados en vivo por Tiempo Vaquero
+          </a>
+        </div>
       </div>
     </footer>
   );

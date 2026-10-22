@@ -6,9 +6,14 @@ insert into public.generations (birth_year, title, notes) values
   (2022, 'Generación 2022', 'En revisión y registro. Compite en la temporada 2027.');
 
 insert into public.settings (key, value) values
-  ('live_url', '"https://tiempovaquero.com"'),
+  ('live_url', '"https://tiempovaquero.com/#/en-vivo"'),
   ('youtube_url', '"https://www.youtube.com/@futuritydelcoleo"'),
+  ('youtube_channel_id', '"UCRYSh_OQJcmN2hIZmN0CfkQ"'),
+  ('youtube_live_video', '""'),  -- enlace de un video/directo puntual; vacío = directo actual del canal
   ('instagram_url', '"https://www.instagram.com/futuritydelcoleo_oficial/"'),
+  ('caballodelfuturo_instagram_url', '"https://www.instagram.com/caballodelfuturo_oficial/"'),
+  ('contact_email', '"info@futuritydelcoleo.com"'),
+  ('contact_location', '"Maracay, estado Aragua · Venezuela"'),
   ('current_season', '2026');
 
 insert into public.events (season, birth_year, stage, name, starts_on, ends_on, venue, city, status) values

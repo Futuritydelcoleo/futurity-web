@@ -2,23 +2,21 @@ import Link from 'next/link';
 import { Countdown } from '@/components/Countdown';
 import { Crest } from '@/components/Crest';
 import { HorseCard } from '@/components/HorseCard';
-import { getCurrentSeason, getGenerations, getSeasonEvents, getSettings, getSponsors, getStandings } from '@/lib/data';
+import { getCurrentSeason, getGenerations, getSeasonEvents, getSponsors, getStandings } from '@/lib/data';
 import { eventDates, STAGE_LABEL, STAGE_SHORT, STATUS_LABEL } from '@/lib/format';
 
 export const revalidate = 60;
 
 export default async function Home() {
   const season = await getCurrentSeason();
-  const [events, standings, sponsors, generations, settings] = await Promise.all([
+  const [events, standings, sponsors, generations] = await Promise.all([
     getSeasonEvents(season),
     getStandings(season),
     getSponsors(),
     getGenerations(),
-    getSettings(),
   ]);
 
   const next = events.find((e) => e.status !== 'finalizada') ?? events[events.length - 1];
-  const liveUrl = next?.live_url ?? (settings.live_url as string) ?? 'https://tiempovaquero.com';
   const competingYear = next?.birth_year ?? season - 5;
   const competing = generations.find((g) => g.birth_year === competingYear);
   const top = standings.slice(0, 5);
@@ -52,9 +50,9 @@ export default async function Home() {
           )}
 
           <div className="hero-actions">
-            <a className="btn btn--live" href={liveUrl} target="_blank" rel="noreferrer">
-              <span className="live-dot" aria-hidden /> Ver tiempos en vivo
-            </a>
+            <Link className="btn btn--live" href="/en-vivo">
+              <span className="live-dot" aria-hidden /> Ver en vivo
+            </Link>
             <Link className="btn btn--ghost" href="/ranking">
               Ranking {season}
             </Link>
