@@ -150,7 +150,7 @@ export default async function Home() {
                 <h2 className="display">Patrocinantes</h2>
               </div>
             </div>
-            <Sponsors sponsors={sponsors} />
+            <Sponsors sponsors={sponsors} limit={18} />
           </div>
         </section>
       )}
