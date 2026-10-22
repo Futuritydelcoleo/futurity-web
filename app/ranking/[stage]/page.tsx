@@ -51,8 +51,9 @@ export default async function StageResultsPage({ params }: Props) {
             </div>
           )}
           <p className="legend">
-            <b>Pts:</b> puntos en esta válida · <b>Nul.:</b> nulas · <b>S.P.:</b> saques de puerta. Empates en puntos
-            comparten puesto. Datos según la planilla oficial de la organización.
+            <b>Pts:</b> puntos en esta válida · <b>Nul.:</b> nulas · <b>S.P.:</b> saques de puerta. El podio es el oficial:
+            los desempates se deciden por penalizaciones que no figuran en la planilla, por eso fuera del podio los
+            empates en puntos comparten puesto. Datos según la planilla oficial de la organización.
           </p>
         </div>
       </section>
