@@ -1,0 +1,135 @@
+import { supabase } from './supabase';
+
+export type Stage = 'cf1' | 'cf2' | 'futurity';
+export type EventStatus = 'programada' | 'reprogramada' | 'en_curso' | 'finalizada';
+
+export type Horse = {
+  id: string;
+  registration_code: string | null;
+  name: string;
+  slug: string;
+  sex: 'macho' | 'hembra' | null;
+  birth_year: number;
+  aqha_status: string | null;
+  owner: string | null;
+  stable: string | null;
+  photo_url: string | null;
+};
+
+export type CompetitionEvent = {
+  id: string;
+  season: number;
+  birth_year: number;
+  stage: Stage;
+  name: string;
+  starts_on: string | null;
+  ends_on: string | null;
+  venue: string | null;
+  city: string | null;
+  status: EventStatus;
+  live_url: string | null;
+};
+
+export type Standing = {
+  position: number;
+  athletes: string | null;
+  pts_e: number;
+  pts_n: number;
+  pts_sp: number;
+  horse: Pick<Horse, 'name' | 'slug' | 'owner' | 'stable' | 'registration_code'>;
+};
+
+export type EventResult = {
+  event_id: string;
+  athlete: string | null;
+  position: number | null;
+  pts_e: number;
+  pts_n: number;
+  pts_sp: number;
+};
+
+export type Sponsor = { id: string; name: string; tier: string; logo_url: string | null; website: string | null };
+
+export type Generation = { birth_year: number; title: string; notes: string | null; horses: number };
+
+const HORSE_COLUMNS = 'id, registration_code, name, slug, sex, birth_year, aqha_status, owner, stable, photo_url';
+
+function check<T>(res: { data: T | null; error: { message: string } | null }): T {
+  if (res.error) throw new Error(res.error.message);
+  return res.data as T;
+}
+
+export async function getSettings(): Promise<Record<string, unknown>> {
+  const rows = check(await supabase.from('settings').select('key, value'));
+  return Object.fromEntries(rows.map((r) => [r.key, r.value]));
+}
+
+export async function getCurrentSeason(): Promise<number> {
+  const settings = await getSettings();
+  return Number(settings.current_season ?? new Date().getFullYear());
+}
+
+export async function getSeasonEvents(season: number): Promise<CompetitionEvent[]> {
+  const events = check(await supabase.from('events').select('*').eq('season', season));
+  const order: Stage[] = ['cf1', 'cf2', 'futurity'];
+  return (events as CompetitionEvent[]).sort((a, b) => order.indexOf(a.stage) - order.indexOf(b.stage));
+}
+
+export async function getStandings(season: number): Promise<Standing[]> {
+  const rows = check(
+    await supabase
+      .from('standings')
+      .select('position, athletes, pts_e, pts_n, pts_sp, horse:horses(name, slug, owner, stable, registration_code)')
+      .eq('season', season)
+      .order('position'),
+  );
+  return rows as unknown as Standing[];
+}
+
+export async function getSponsors(): Promise<Sponsor[]> {
+  return check(
+    await supabase.from('sponsors').select('id, name, tier, logo_url, website').eq('active', true).order('sort_order'),
+  );
+}
+
+export async function getGenerations(): Promise<Generation[]> {
+  const rows = check(
+    await supabase.from('generations').select('birth_year, title, notes, horses(count)').order('birth_year', { ascending: false }),
+  );
+  return rows.map((g) => ({
+    birth_year: g.birth_year,
+    title: g.title,
+    notes: g.notes,
+    horses: (g.horses as unknown as { count: number }[])[0]?.count ?? 0,
+  }));
+}
+
+export async function getGeneration(year: number) {
+  const generation = check(
+    await supabase.from('generations').select('birth_year, title, notes').eq('birth_year', year).maybeSingle(),
+  ) as Omit<Generation, 'horses'> | null;
+  if (!generation) return null;
+  const horses = check(
+    await supabase.from('horses').select(HORSE_COLUMNS).eq('birth_year', year).order('registration_code', { nullsFirst: false }).order('name'),
+  ) as Horse[];
+  return { generation, horses };
+}
+
+export async function getHorse(slug: string) {
+  const horse = check(await supabase.from('horses').select(HORSE_COLUMNS).eq('slug', slug).maybeSingle()) as Horse | null;
+  if (!horse) return null;
+
+  const [events, results, standing] = await Promise.all([
+    supabase.from('events').select('*').eq('birth_year', horse.birth_year),
+    supabase.from('event_results').select('event_id, athlete, position, pts_e, pts_n, pts_sp').eq('horse_id', horse.id),
+    supabase.from('standings').select('season, position, athletes, pts_e, pts_n, pts_sp').eq('horse_id', horse.id).maybeSingle(),
+  ]);
+
+  const order: Stage[] = ['cf1', 'cf2', 'futurity'];
+  return {
+    horse,
+    events: (check(events) as CompetitionEvent[]).sort((a, b) => order.indexOf(a.stage) - order.indexOf(b.stage)),
+    results: check(results) as EventResult[],
+    standing: check(standing) as (Omit<Standing, 'horse'> & { season: number }) | null,
+  };
+}
