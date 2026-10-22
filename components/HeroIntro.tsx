@@ -14,7 +14,17 @@ import { RIG, type RigPiece } from './heroRig';
 // silueta es idéntica al logo, así el cambio final no se nota.
 
 type Joint = { piece: string; px: number; py: number };
-type LegDef = { upper: Joint | 'mare-thigh-l' | 'mare-thigh-r'; lower: Joint; kind: 'front' | 'hind'; phase: number; amp: number };
+/** `scale`: la pata se toma de otra parte del logo y se coloca escalada con la cadera en `hip`. */
+type LegDef = {
+  upper: Joint;
+  lower: Joint;
+  kind: 'front' | 'hind';
+  phase: number;
+  amp: number;
+  scale?: { hip: [number, number]; k: number };
+  /** grados que se suman al muslo mientras galopa (se apaga al detenerse) */
+  bias?: number;
+};
 
 // Ciclo de galope. Ángulo > 0 lleva el casco hacia atrás (avanzan hacia la derecha).
 type Track = { t: number[]; upper: number[]; lower: number[] };
@@ -23,18 +33,21 @@ const GAIT: Record<'front' | 'hind', Track> = {
   hind: { t: [0, 0.2, 0.45, 0.62, 0.82, 1], upper: [28, 15, -28, -22, 5, 28], lower: [0, -70, -25, 5, 0, 0] },
 };
 
-// Muslos traseros de la yegua: en el logo los tapa el potro, así que se dibujan.
-const MARE_THIGH = {
-  'mare-thigh-l': { hip: [200, 316], hock: [212, 369], w0: 32, w1: 15 },
-  'mare-thigh-r': { hip: [226, 316], hock: [240, 366], w0: 32, w1: 15 },
-} as const;
-
-const MARE_LEGS: LegDef[] = [
-  { upper: 'mare-thigh-l', lower: { piece: 'mare_hl_lower', px: 212, py: 369 }, kind: 'hind', phase: 0, amp: 1 },
-  { upper: 'mare-thigh-r', lower: { piece: 'mare_hr_lower', px: 240, py: 366 }, kind: 'hind', phase: 0.1, amp: 1 },
+// Patas traseras de la yegua: en el logo el potro las tapa, así que mientras corre
+// usa las del potro (dibujo real del logo) escaladas a su tamaño. Al detenerse se
+// desvanecen y aparecen las cañas propias del logo.
+const MARE_HIND_SCALE = 1.65; // tamaño yegua / potro
+const FOAL_HIND = { upper: { piece: 'foal_hf_upper', px: 198, py: 352 }, lower: { piece: 'foal_hf_lower', px: 172, py: 378 } };
+const MARE_HIND_LEGS: LegDef[] = [
+  // la pata del potro ya viene inclinada hacia atrás: se adelanta 22° para que caiga bajo la cadera
+  { ...FOAL_HIND, kind: 'hind', phase: 0, amp: 0.8, bias: -22, scale: { hip: [206, 312], k: MARE_HIND_SCALE } },
+  { ...FOAL_HIND, kind: 'hind', phase: 0.1, amp: 0.8, bias: -22, scale: { hip: [230, 312], k: MARE_HIND_SCALE } },
+];
+const MARE_FRONT_LEGS: LegDef[] = [
   { upper: { piece: 'mare_fl_upper', px: 360, py: 322 }, lower: { piece: 'mare_fl_lower', px: 357, py: 375 }, kind: 'front', phase: 0.45, amp: 1 },
   { upper: { piece: 'mare_fr_upper', px: 383, py: 322 }, lower: { piece: 'mare_fr_lower', px: 384, py: 378 }, kind: 'front', phase: 0.55, amp: 1 },
 ];
+const MARE_LEGS = [...MARE_HIND_LEGS, ...MARE_FRONT_LEGS];
 
 const FOAL_LEGS: LegDef[] = [
   { upper: { piece: 'foal_hb_upper', px: 186, py: 350 }, lower: { piece: 'foal_hb_lower', px: 146, py: 386 }, kind: 'hind', phase: 0, amp: 0.75 },
@@ -43,9 +56,10 @@ const FOAL_LEGS: LegDef[] = [
   { upper: { piece: 'foal_ff2_upper', px: 288, py: 350 }, lower: { piece: 'foal_ff2_lower', px: 313, py: 364 }, kind: 'front', phase: 0.55, amp: 0.75 },
 ];
 
-// Vientre y anca de la yegua que en el logo quedan detrás del potro.
+// Vientre y anca de la yegua que en el logo quedan detrás del potro: línea del
+// vientre casi plana a la altura del vientre real (y≈316 junto a las manos).
 const MARE_HIDDEN =
-  '176,288 177,318 181,329 188,337 198,343 226,347 252,342 290,333 340,327 346,318 346,300 330,252 282,246 240,262 200,272';
+  '176,288 176,316 179,324 186,329 198,331 222,328 246,322 272,318 305,317 335,317 346,315 346,300 330,252 282,246 240,262 200,272';
 
 // Coreografía (segundos desde que arranca)
 const MARE_RUN = { start: 0, dur: 1.8 };
@@ -72,30 +86,19 @@ function Piece({ p }: { p: RigPiece }) {
 type LegRefs = { upper: SVGGElement | null; lower: SVGGElement | null };
 
 function Leg({ leg, refs }: { leg: LegDef; refs: LegRefs }) {
-  const up = leg.upper;
-  const thigh = typeof up === 'string' ? MARE_THIGH[up] : null;
-  return (
+  const body = (
     <g ref={(el) => { refs.upper = el; }}>
-      {thigh ? (
-        <path
-          className="rig-rebuilt"
-          d={(() => {
-            const [hx, hy] = thigh.hip; const [kx, ky] = thigh.hock;
-            return `M${hx - thigh.w0 / 2} ${hy} L${hx + thigh.w0 / 2} ${hy} L${kx + thigh.w1 / 2} ${ky + 2} L${kx - thigh.w1 / 2} ${ky + 2} Z`;
-          })()}
-        />
-      ) : (
-        <Piece p={RIG[(up as Joint).piece]} />
-      )}
+      <Piece p={RIG[leg.upper.piece]} />
       <g ref={(el) => { refs.lower = el; }}>
         <Piece p={RIG[leg.lower.piece]} />
       </g>
     </g>
   );
-}
-
-function pivotOf(leg: LegDef): [number, number] {
-  return typeof leg.upper === 'string' ? (MARE_THIGH[leg.upper].hip as unknown as [number, number]) : [leg.upper.px, leg.upper.py];
+  if (!leg.scale) return body;
+  // pata prestada: se lleva la cadera original a `hip` y se escala alrededor de ella;
+  // los giros siguen usando los pivotes originales dentro de este grupo
+  const [hx, hy] = leg.scale.hip;
+  return <g transform={`translate(${hx} ${hy}) scale(${leg.scale.k}) translate(${-leg.upper.px} ${-leg.upper.py})`}>{body}</g>;
 }
 
 export function HeroIntro() {
@@ -105,6 +108,7 @@ export function HeroIntro() {
   const mareBob = useRef<SVGGElement>(null);
   const foalBob = useRef<SVGGElement>(null);
   const hiddenRef = useRef<SVGGElement>(null);
+  const cannonsRef = useRef<SVGGElement>(null);
   const mareLegs = useRef<LegRefs[]>(MARE_LEGS.map(() => ({ upper: null, lower: null })));
   const foalLegs = useRef<LegRefs[]>(FOAL_LEGS.map(() => ({ upper: null, lower: null })));
   const [playing, setPlaying] = useState(false);
@@ -155,10 +159,9 @@ export function HeroIntro() {
       legs.forEach((leg, i) => {
         const g = GAIT[leg.kind];
         const p = (((cycles + leg.phase) % 1) + 1) % 1;
-        const a = sample(g.t, g.upper, p) * amp * leg.amp;
+        const a = (sample(g.t, g.upper, p) * leg.amp + (leg.bias ?? 0)) * amp;
         const b = sample(g.t, g.lower, p) * amp * leg.amp;
-        const [px, py] = pivotOf(leg);
-        refs[i].upper?.setAttribute('transform', `rotate(${a.toFixed(2)} ${px} ${py})`);
+        refs[i].upper?.setAttribute('transform', `rotate(${a.toFixed(2)} ${leg.upper.px} ${leg.upper.py})`);
         refs[i].lower?.setAttribute('transform', `rotate(${b.toFixed(2)} ${leg.lower.px} ${leg.lower.py})`);
       });
       const lift = Math.sin(cycles * Math.PI * 2) * -7 * amp;
@@ -178,6 +181,7 @@ export function HeroIntro() {
       // lo reconstruido de la yegua desaparece justo cuando el potro lo tapa
       const hide = clamp01((t - HIDDEN_FADE.start) / (HIDDEN_FADE.end - HIDDEN_FADE.start));
       hiddenRef.current?.setAttribute('opacity', (1 - hide).toFixed(3));
+      cannonsRef.current?.setAttribute('opacity', hide.toFixed(3));
       if (!frozen && t < end) raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
@@ -200,11 +204,20 @@ export function HeroIntro() {
       <div ref={mareRef} className="intro__horse" aria-hidden>
         <svg className="intro__horses" viewBox="0 0 602 602">
           <g ref={mareBob}>
+            {/* reconstruido mientras corre: vientre + patas traseras del potro escaladas */}
             <g ref={hiddenRef}>
               <polygon className="rig-rebuilt" points={MARE_HIDDEN} />
+              {MARE_HIND_LEGS.map((leg, i) => (
+                <Leg key={i} leg={leg} refs={mareLegs.current[i]} />
+              ))}
             </g>
-            {MARE_LEGS.map((leg, i) => (
-              <Leg key={i} leg={leg} refs={mareLegs.current[i]} />
+            {/* cañas traseras propias del logo: aparecen al detenerse */}
+            <g ref={cannonsRef} opacity={0}>
+              <Piece p={RIG.mare_hl_lower} />
+              <Piece p={RIG.mare_hr_lower} />
+            </g>
+            {MARE_FRONT_LEGS.map((leg, i) => (
+              <Leg key={i} leg={leg} refs={mareLegs.current[MARE_HIND_LEGS.length + i]} />
             ))}
             <Piece p={RIG.mare_body} />
           </g>
