@@ -207,6 +207,38 @@ img, svg { display: block; max-width: 100%; }
 /* ───────── Portada ───────── */
 .hero { padding: 56px 0 72px; text-align: center; overflow: hidden; }
 .hero .crest { margin: 0 auto 18px; filter: drop-shadow(0 0 40px rgba(143, 224, 58, 0.45)); }
+
+/* Intro animada: galope → disco → anillo → logo (≈3 s) */
+.intro { --s: 230px; position: relative; width: var(--s); height: var(--s); margin: 0 auto 22px; }
+.intro__img { position: absolute; inset: 0; width: 100%; height: 100%; }
+.intro__logo { opacity: 0; animation: intro-logo 0.6s ease-out 2.3s forwards, intro-glow 3s ease-in-out 3s infinite; }
+.intro__run { position: absolute; inset: 0; animation: intro-run 1.6s cubic-bezier(0.16, 0.84, 0.3, 1) both, intro-out 0.5s ease 2.45s forwards; }
+.intro__gallop { position: absolute; inset: 0; animation: intro-gallop 0.22s ease-in-out 7 alternate both; }
+.intro__ring { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.intro__disc { fill: var(--green-800); transform-origin: 50% 50%; transform: scale(0); animation: intro-disc 0.55s cubic-bezier(0.3, 1.4, 0.5, 1) 1.35s forwards; }
+.intro__stroke { fill: none; stroke: #fff; stroke-width: 3; stroke-dasharray: 100; stroke-dashoffset: 100; transform: rotate(-90deg); transform-origin: 50% 50%; animation: intro-draw 0.75s ease-in-out 1.6s forwards; }
+.intro__trail { position: absolute; top: 34%; right: 60%; width: 70vw; height: 40%; display: grid; align-content: space-around; pointer-events: none; opacity: 0; animation: intro-trail 1.7s ease-out forwards; }
+.intro__trail span { display: block; height: 3px; border-radius: 3px; background: linear-gradient(90deg, transparent, var(--lime)); }
+.intro__trail span:nth-child(2) { margin-left: 25%; opacity: 0.7; }
+.intro__trail span:nth-child(3) { margin-left: 45%; opacity: 0.5; }
+@keyframes intro-run { from { transform: translateX(-75vw) scale(0.9); } to { transform: none; } }
+@keyframes intro-gallop { from { transform: translateY(0) rotate(0deg); } to { transform: translateY(-6px) rotate(-1.5deg); } }
+@keyframes intro-trail { 0% { opacity: 0; transform: translateX(-30%); } 25% { opacity: 1; } 100% { opacity: 0; transform: translateX(10%); } }
+@keyframes intro-disc { to { transform: scale(1); } }
+@keyframes intro-draw { to { stroke-dashoffset: 0; } }
+@keyframes intro-logo { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: none; } }
+@keyframes intro-out { to { opacity: 0; } }
+@keyframes intro-glow { 0%, 100% { filter: drop-shadow(0 0 24px rgba(143, 224, 58, 0.35)); } 50% { filter: drop-shadow(0 0 48px rgba(143, 224, 58, 0.6)); } }
+.hero-reveal { opacity: 0; animation: hero-reveal 0.7s ease-out forwards; }
+.hero-reveal--1 { animation-delay: 2.5s; }
+.hero-reveal--2 { animation-delay: 2.75s; }
+.hero-reveal--3 { animation-delay: 3s; }
+@keyframes hero-reveal { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@media (max-width: 520px) { .intro { --s: 180px; } }
+@media (prefers-reduced-motion: reduce) {
+  .intro__run, .intro__ring, .intro__trail { display: none; }
+  .intro__logo, .hero-reveal { opacity: 1; animation: none; }
+}
 .hero h1 { font-size: clamp(56px, 13vw, 138px); }
 .hero h1 span { display: block; font-size: 0.55em; color: var(--white); opacity: 0.92; }
 .tape {
@@ -291,6 +323,41 @@ img, svg { display: block; max-width: 100%; }
   .horse-grid .horse-card__meta { font-size: 12px; }
   .horse-grid .horse-card__id { font-size: 11px; padding: 2px 8px; top: 8px; right: 8px; }
 }
+
+/* Noticias */
+.news-list { display: grid; gap: 18px; }
+.news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+.news-card {
+  display: grid; grid-template-rows: auto 1fr; overflow: hidden; text-decoration: none;
+  border-radius: 20px; background: var(--card); border: 1px solid var(--line);
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+.news-card:hover { transform: translateY(-3px); border-color: var(--lime); }
+.news-card__media { position: relative; aspect-ratio: 16 / 9; overflow: hidden; background: var(--green-900); }
+.news-card__media > img { width: 100%; height: 100%; object-fit: cover; }
+.news-card__art { position: absolute; inset: 0; display: grid; place-items: center; }
+.news-card__art img { filter: drop-shadow(0 0 30px rgba(143, 224, 58, 0.45)); }
+.news-card__body { display: grid; gap: 8px; align-content: start; padding: 18px 20px 22px; }
+.news-card__date { font-family: var(--font-condensed); font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; font-size: 13px; color: var(--muted); }
+.news-card__title { margin: 0; font-family: var(--font-display); font-weight: 900; font-style: italic; text-transform: uppercase; font-size: 21px; line-height: 1.1; }
+.news-card__excerpt { margin: 0; color: var(--muted); font-size: 15px; }
+.news-card__more { font-family: var(--font-condensed); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; font-size: 14px; color: var(--lime); }
+.news-card--featured { grid-template-columns: 1.2fr 1fr; grid-template-rows: none; }
+.news-card--featured .news-card__media { aspect-ratio: auto; min-height: 280px; }
+.news-card--featured .news-card__body { align-content: center; padding: 32px; }
+.news-card--featured .news-card__title { font-size: clamp(26px, 3.4vw, 40px); }
+@media (max-width: 760px) { .news-card--featured { grid-template-columns: 1fr; } .news-card--featured .news-card__media { min-height: 200px; } .news-card--featured .news-card__body { padding: 20px; } }
+.news-tag {
+  position: absolute; left: 12px; top: 12px; display: inline-block; width: fit-content;
+  padding: 4px 12px; border-radius: 999px; background: #fff; color: var(--green-900);
+  font-family: var(--font-condensed); font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; font-size: 12px;
+}
+.news-tag--resultados { background: var(--gold); }
+.news-tag--revision { background: var(--lime); }
+.article { max-width: 760px; display: grid; gap: 14px; }
+.article__title { font-size: clamp(34px, 6vw, 58px); }
+.article__image { width: 100%; border-radius: 20px; margin: 8px 0; }
+.article__body p { font-size: 18px; line-height: 1.7; margin: 0 0 18px; }
 
 /* Patrocinantes (estilo historias "Sponsors") */
 .sponsors-wrap { display: grid; gap: 16px; }

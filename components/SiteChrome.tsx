@@ -5,6 +5,7 @@ const NAV = [
   { href: '/', label: 'Inicio' },
   { href: '/ranking', label: 'Ranking' },
   { href: '/generaciones', label: 'Generaciones' },
+  { href: '/noticias', label: 'Noticias' },
 ];
 
 export function Header() {
@@ -67,6 +68,7 @@ export function Footer({ instagram, caballoDelFuturo, youtube, liveUrl, email, l
               <li><Link href="/en-vivo">Transmisión en vivo</Link></li>
               <li><Link href="/ranking">Ranking acumulado</Link></li>
               <li><Link href="/generaciones">Generaciones</Link></li>
+              <li><Link href="/noticias">Noticias</Link></li>
               <li><Link href="/patrocinantes">Patrocinantes</Link></li>
               <li><a href={liveUrl} target="_blank" rel="noreferrer">Resultados en Tiempo Vaquero</a></li>
             </ul>

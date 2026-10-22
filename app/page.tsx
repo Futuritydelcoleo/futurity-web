@@ -1,20 +1,22 @@
 import Link from 'next/link';
 import { Countdown } from '@/components/Countdown';
-import { Crest } from '@/components/Crest';
+import { HeroIntro } from '@/components/HeroIntro';
 import { HorseCard } from '@/components/HorseCard';
+import { NewsCard } from '@/components/NewsCard';
 import { Sponsors } from '@/components/Sponsors';
-import { getCurrentSeason, getGenerations, getSeasonEvents, getSponsors, getStandings } from '@/lib/data';
+import { getCurrentSeason, getGenerations, getNews, getSeasonEvents, getSponsors, getStandings } from '@/lib/data';
 import { eventDates, STAGE_LABEL, STAGE_SHORT, STATUS_LABEL } from '@/lib/format';
 
 export const revalidate = 60;
 
 export default async function Home() {
   const season = await getCurrentSeason();
-  const [events, standings, sponsors, generations] = await Promise.all([
+  const [events, standings, sponsors, generations, news] = await Promise.all([
     getSeasonEvents(season),
     getStandings(season),
     getSponsors(),
     getGenerations(),
+    getNews(3),
   ]);
 
   const next = events.find((e) => e.status !== 'finalizada') ?? events[events.length - 1];
@@ -26,16 +28,15 @@ export default async function Home() {
     <>
       <section className="hero glow grain">
         <div className="wrap">
-          <Crest size={170} className="crest" priority />
-          <p className="kicker">Temporada {season} · Equinos nacidos en {competingYear}</p>
-          <h1 className="display">
+          <HeroIntro />
+          <p className="kicker hero-reveal hero-reveal--1">Temporada {season} · Equinos nacidos en {competingYear}</p>
+          <h1 className="display hero-reveal hero-reveal--1">
             Futurity
             <span>del Coleo</span>
           </h1>
 
           {next && (
-            <>
-              {next.status === 'reprogramada' && <div className="tape">Reprogramado</div>}
+            <div className="hero-reveal hero-reveal--2">
               <div className="hero-event">
                 <span className="hero-event__name">{next.name}</span>
                 <span className="hero-event__dates">{eventDates(next)}</span>
@@ -47,10 +48,10 @@ export default async function Home() {
                 )}
               </div>
               {next.starts_on && next.status !== 'finalizada' && <Countdown date={next.starts_on} />}
-            </>
+            </div>
           )}
 
-          <div className="hero-actions">
+          <div className="hero-actions hero-reveal hero-reveal--3">
             <Link className="btn btn--live" href="/en-vivo">
               <span className="live-dot" aria-hidden /> Ver en vivo
             </Link>
@@ -90,6 +91,27 @@ export default async function Home() {
           </div>
         </div>
       </section>
+
+      {news.length > 0 && (
+        <section className="section" style={{ paddingTop: 0 }}>
+          <div className="wrap">
+            <div className="section-head">
+              <div>
+                <p className="kicker">Lo último</p>
+                <h2 className="display">Noticias</h2>
+              </div>
+              <Link className="btn btn--lime btn--sm" href="/noticias">
+                Ver todas
+              </Link>
+            </div>
+            <div className="news-grid">
+              {news.map((n) => (
+                <NewsCard key={n.slug} item={n} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {top.length > 0 && (
         <section className="section" style={{ paddingTop: 0 }}>

@@ -44,6 +44,18 @@ export function youtubeVideoId(url: string): string | null {
   return m ? m[1] : null;
 }
 
+/** "8 de octubre de 2026" (hora de Venezuela) */
+export function newsDate(iso: string): string {
+  return new Intl.DateTimeFormat('es-VE', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'America/Caracas' }).format(new Date(iso));
+}
+
+export const NEWS_CATEGORY: Record<string, string> = {
+  aviso: 'Aviso oficial',
+  resultados: 'Resultados',
+  revision: 'Revisión y registro',
+  evento: 'Evento',
+};
+
 export function pad(n: number): string {
   return String(n).padStart(2, '0');
 }

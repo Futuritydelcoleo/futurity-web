@@ -70,7 +70,29 @@ export async function getSeasonVideos(season: number): Promise<EventWithVideos[]
   return rows.sort((a, b) => order.indexOf(a.stage) - order.indexOf(b.stage));
 }
 
-export type Sponsor ={ id: string; name: string; tier: string; logo_url: string | null; website: string | null };
+export type News = {
+  slug: string;
+  title: string;
+  excerpt: string | null;
+  body: string;
+  category: 'aviso' | 'resultados' | 'revision' | 'evento';
+  image_url: string | null;
+  published_at: string;
+};
+
+const NEWS_COLUMNS = 'slug, title, excerpt, body, category, image_url, published_at';
+
+export async function getNews(limit?: number): Promise<News[]> {
+  let q = supabase.from('news').select(NEWS_COLUMNS).order('published_at', { ascending: false });
+  if (limit) q = q.limit(limit);
+  return check(await q) as News[];
+}
+
+export async function getNewsItem(slug: string): Promise<News | null> {
+  return check(await supabase.from('news').select(NEWS_COLUMNS).eq('slug', slug).maybeSingle()) as News | null;
+}
+
+export type Sponsor = { id: string; name: string; tier: string; logo_url: string | null; website: string | null };
 
 export type Generation = { birth_year: number; title: string; notes: string | null; horses: number };
 
