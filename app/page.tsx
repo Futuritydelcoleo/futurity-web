@@ -77,8 +77,9 @@ export default async function Home() {
           </div>
           <div className="road">
             {events.map((e) => (
-              <div
+              <Link
                 key={e.id}
+                href={`/ranking/${e.stage}`}
                 className={`road__step ${e.stage === 'futurity' ? 'road__step--final' : ''} ${e.status === 'finalizada' ? 'road__step--done' : ''}`}
               >
                 <div className="road__dot">{STAGE_SHORT[e.stage]}</div>
@@ -86,8 +87,9 @@ export default async function Home() {
                   <div className="road__name">{STAGE_LABEL[e.stage]}</div>
                   <div className="road__meta">{eventDates(e, false)}</div>
                   <span className={`badge badge--${e.status}`}>{STATUS_LABEL[e.status]}</span>
+                  <span className="road__cta">{e.status === 'finalizada' ? 'Ver resultados' : 'Ver detalles'} →</span>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>

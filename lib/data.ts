@@ -140,6 +140,46 @@ export async function getStandings(season: number): Promise<Standing[]> {
   return rows as unknown as Standing[];
 }
 
+/** Resultados de una válida con forma de fila de ranking: primero los puestos oficiales publicados,
+ *  luego por puntos (empates comparten puesto). */
+export async function getStageResults(season: number, stage: Stage) {
+  const event = check(
+    await supabase.from('events').select('*').eq('season', season).eq('stage', stage).maybeSingle(),
+  ) as CompetitionEvent | null;
+  if (!event) return null;
+
+  const [results, standings] = await Promise.all([
+    supabase
+      .from('event_results')
+      .select('athlete, position, pts_e, pts_n, pts_sp, horse:horses(id, name, slug, owner, stable, registration_code)')
+      .eq('event_id', event.id),
+    supabase.from('standings').select('horse_id, athletes').eq('season', season),
+  ]);
+  const athletes = new Map((check(standings) as { horse_id: string; athletes: string | null }[]).map((s) => [s.horse_id, s.athletes]));
+
+  type Row = Omit<EventResult, 'event_id'> & { horse: Horse };
+  const sorted = (check(results) as unknown as Row[]).sort(
+    (a, b) => (a.position ?? 1e9) - (b.position ?? 1e9) || b.pts_e - a.pts_e || a.pts_n - b.pts_n,
+  );
+
+  const rows: Standing[] = [];
+  sorted.forEach((r, i) => {
+    const prev = sorted[i - 1];
+    const tied = prev && prev.position == null && r.position == null && prev.pts_e === r.pts_e;
+    rows.push({
+      position: r.position ?? (tied ? rows[i - 1].position : i + 1),
+      athletes: r.athlete ?? athletes.get(r.horse.id) ?? null,
+      pts_e: r.pts_e,
+      pts_n: r.pts_n,
+      pts_sp: r.pts_sp,
+      cf1_pts: null,
+      cf2_pts: null,
+      horse: r.horse,
+    });
+  });
+  return { event, rows };
+}
+
 export async function getSponsors(): Promise<Sponsor[]> {
   return check(
     await supabase.from('sponsors').select('id, name, tier, logo_url, website').eq('active', true).order('sort_order'),

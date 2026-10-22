@@ -9,7 +9,8 @@ function normalize(s: string) {
   return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 }
 
-export function RankingTable({ rows }: { rows: Standing[] }) {
+/** stages = false oculta las columnas CF1/CF2 (tabla de una sola válida). */
+export function RankingTable({ rows, stages = true }: { rows: Standing[]; stages?: boolean }) {
   const [q, setQ] = useState('');
 
   const filtered = useMemo(() => {
@@ -48,9 +49,13 @@ export function RankingTable({ rows }: { rows: Standing[] }) {
                 <th>Propietario</th>
                 <th>Atleta</th>
                 <th>Caballeriza</th>
-                <th className="num" title="Puntos en el Caballo del Futuro I">CF1</th>
-                <th className="num" title="Puntos en el Caballo del Futuro II">CF2</th>
-                <th className="num" title="Puntos acumulados">Pts</th>
+                {stages && (
+                  <>
+                    <th className="num" title="Puntos en el Caballo del Futuro I">CF1</th>
+                    <th className="num" title="Puntos en el Caballo del Futuro II">CF2</th>
+                  </>
+                )}
+                <th className="num" title={stages ? 'Puntos acumulados' : 'Puntos'}>Pts</th>
                 <th className="num" title="Nulas">Nul.</th>
                 <th className="num" title="Saques de puerta">S.P.</th>
               </tr>
@@ -65,8 +70,12 @@ export function RankingTable({ rows }: { rows: Standing[] }) {
                   <td>{r.horse.owner}</td>
                   <td>{r.athletes}</td>
                   <td>{r.horse.stable}</td>
-                  <td className="num pts pts--stage">{r.cf1_pts ?? '—'}</td>
-                  <td className="num pts pts--stage">{r.cf2_pts ?? '—'}</td>
+                  {stages && (
+                    <>
+                      <td className="num pts pts--stage">{r.cf1_pts ?? '—'}</td>
+                      <td className="num pts pts--stage">{r.cf2_pts ?? '—'}</td>
+                    </>
+                  )}
                   <td className="num pts pts--main">{r.pts_e}</td>
                   <td className="num pts">{r.pts_n}</td>
                   <td className="num pts">{r.pts_sp}</td>
@@ -86,9 +95,11 @@ export function RankingTable({ rows }: { rows: Standing[] }) {
                 </span>
                 <span className="pts">
                   <b>{r.pts_e}</b>
-                  <span className="pts-split">
-                    CF1 {r.cf1_pts ?? '—'} · CF2 {r.cf2_pts ?? '—'}
-                  </span>
+                  {stages && (
+                    <span className="pts-split">
+                      CF1 {r.cf1_pts ?? '—'} · CF2 {r.cf2_pts ?? '—'}
+                    </span>
+                  )}
                   <span className="pts-split">
                     {r.pts_n} Nul. · {r.pts_sp} S.P.
                   </span>

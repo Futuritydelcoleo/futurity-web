@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { RankingTable } from '@/components/RankingTable';
+import { RankingTabs } from '@/components/RankingTabs';
 import { getCurrentSeason, getStandings } from '@/lib/data';
 
 export const revalidate = 60;
@@ -23,6 +24,7 @@ export default async function RankingPage() {
       </section>
       <section className="section" style={{ paddingTop: 32 }}>
         <div className="wrap">
+          <RankingTabs active="acumulado" />
           {standings.length ? (
             <RankingTable rows={standings} />
           ) : (
