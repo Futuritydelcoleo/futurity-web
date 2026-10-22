@@ -97,27 +97,6 @@ export default async function Home() {
         </div>
       </section>
 
-      {news.length > 0 && (
-        <section className="section" style={{ paddingTop: 0 }}>
-          <div className="wrap">
-            <div className="section-head">
-              <div>
-                <p className="kicker">Lo último</p>
-                <h2 className="display">Noticias</h2>
-              </div>
-              <Link className="btn btn--lime btn--sm" href="/noticias">
-                Ver todas
-              </Link>
-            </div>
-            <div className="news-grid">
-              {news.map((n) => (
-                <NewsCard key={n.slug} item={n} />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
       {top.length > 0 && (
         <section className="section" style={{ paddingTop: 0 }}>
           <div className="wrap">
@@ -199,6 +178,27 @@ export default async function Home() {
           </div>
         </section>
       )}
+      {news.length > 0 && (
+        <section className="section" style={{ paddingTop: 0 }}>
+          <div className="wrap">
+            <div className="section-head">
+              <div>
+                <p className="kicker">Lo último</p>
+                <h2 className="display">Noticias</h2>
+              </div>
+              <Link className="btn btn--lime btn--sm" href="/noticias">
+                Ver todas
+              </Link>
+            </div>
+            <div className="news-grid">
+              {news.map((n) => (
+                <NewsCard key={n.slug} item={n} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
     </>
   );
 }
