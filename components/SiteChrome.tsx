@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Crest } from './Crest';
+import { MobileMenu } from './MobileMenu';
 
 const NAV = [
   { href: '/', label: 'Inicio' },
@@ -7,6 +8,9 @@ const NAV = [
   { href: '/generaciones', label: 'Generaciones' },
   { href: '/noticias', label: 'Noticias' },
 ];
+
+// En el teléfono el menú desplegable incluye también las demás páginas.
+const MOBILE_NAV = [...NAV, { href: '/en-vivo', label: 'En vivo y transmisiones' }, { href: '/patrocinantes', label: 'Patrocinantes' }];
 
 export function Header() {
   return (
@@ -28,6 +32,12 @@ export function Header() {
             <span className="live-dot" aria-hidden /> En vivo
           </Link>
         </nav>
+        <div className="nav-mobile">
+          <Link className="btn btn--live btn--sm" href="/en-vivo">
+            <span className="live-dot" aria-hidden /> En vivo
+          </Link>
+          <MobileMenu links={MOBILE_NAV} />
+        </div>
       </div>
     </header>
   );
