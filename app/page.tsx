@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Countdown } from '@/components/Countdown';
 import { Crest } from '@/components/Crest';
 import { HorseCard } from '@/components/HorseCard';
+import { Sponsors } from '@/components/Sponsors';
 import { getCurrentSeason, getGenerations, getSeasonEvents, getSponsors, getStandings } from '@/lib/data';
 import { eventDates, STAGE_LABEL, STAGE_SHORT, STATUS_LABEL } from '@/lib/format';
 
@@ -149,17 +150,7 @@ export default async function Home() {
                 <h2 className="display">Patrocinantes</h2>
               </div>
             </div>
-            <div className="sponsors">
-              {sponsors.map((sp) => (
-                <div key={sp.id} className={`sponsor sponsor--${sp.tier}`}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  {sp.logo_url ? <img src={sp.logo_url} alt={sp.name} style={{ maxHeight: 70 }} /> : <span className="sponsor__name">{sp.name}</span>}
-                  <span className="sponsor__tier">
-                    {sp.tier === 'oficial' ? 'Patrocinante oficial' : sp.tier === 'medio' ? 'Transmisión oficial' : 'Aliado'}
-                  </span>
-                </div>
-              ))}
-            </div>
+            <Sponsors sponsors={sponsors} />
           </div>
         </section>
       )}
