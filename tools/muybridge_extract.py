@@ -11,7 +11,7 @@ sheet = np.asarray(Image.open(D + '/horse_in_motion.jpg').convert('L')).astype(n
 # Celdas (x0, y0, x1, y1) en la lámina de 1536×952: 4 columnas × 3 filas; la 12 es de pie.
 XS = [(28, 383), (402, 756), (774, 1130), (1148, 1504)]
 YS = [(32, 260), (277, 501), (519, 746)]
-cells = [(x0, y0, x1, y1) for (y0, y1) in YS for (x0, x1) in XS][:11]
+cells = [(x0, y0, x1, y1) for (y0, y1) in YS for (x0, x1) in XS][:12]
 
 # Recorte manual del jinete por fotograma: (x_anca, x_cruz) en coordenadas de la celda.
 # Se borra todo lo que sobresale por encima de la recta del lomo entre esos dos puntos.

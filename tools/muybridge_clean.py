@@ -7,7 +7,26 @@ from PIL import Image, ImageDraw, ImageFilter
 D = r'C:/Users/Christian/AppData/Local/Temp/futsp/muybridge'
 # (x_anca, x_cruz) por fotograma: se borra lo que sobresale sobre la recta del lomo entre ambos
 CUTS = {1: (172, 240), 2: (180, 245), 3: (185, 250), 4: (178, 248), 5: (175, 248), 6: (178, 250),
-        7: (183, 255), 8: (178, 245), 9: (175, 245), 10: (180, 250), 11: (180, 250)}
+        7: (183, 255), 8: (178, 245), 9: (175, 245), 10: (180, 250), 11: (180, 250), 12: (156, 214)}
+
+
+def only_horse(mask):
+    """Conserva solo la pieza más grande (el caballo): quita puntos sueltos del suelo."""
+    from collections import deque
+    H, W = mask.shape
+    lab = np.zeros((H, W), np.int32); best = (0, 0); n = 0
+    for y in range(H):
+        for x in range(W):
+            if mask[y, x] and not lab[y, x]:
+                n += 1; q = deque([(y, x)]); lab[y, x] = n; c = 0
+                while q:
+                    cy, cx = q.popleft(); c += 1
+                    for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                        ny, nx = cy + dy, cx + dx
+                        if 0 <= ny < H and 0 <= nx < W and mask[ny, nx] and not lab[ny, nx]:
+                            lab[ny, nx] = n; q.append((ny, nx))
+                if c > best[1]: best = (n, c)
+    return lab == best[0]
 
 
 def top_y(m, x):
@@ -16,7 +35,7 @@ def top_y(m, x):
 
 
 cleaned = []
-for i in range(1, 12):
+for i in range(1, 13):
     m = np.load(f'{D}/f{i:02d}_raw.npy').copy()
     H, W = m.shape
     xa, xb = CUTS[i]
@@ -44,6 +63,7 @@ for i in range(1, 12):
     im = Image.fromarray((m * 255).astype(np.uint8)).filter(ImageFilter.MedianFilter(3))
     big = np.zeros((300, 420), bool)  # lienzo común con margen para el corrimiento
     sm = np.asarray(im) > 128
+    sm = only_horse(sm)
     big[20:20 + sm.shape[0], 30:30 + sm.shape[1]] = sm
     cleaned.append(big)
 
@@ -73,7 +93,7 @@ union = np.any(shifted, axis=0)
 ys, xs = np.where(union)
 X0, X1, Y0, Y1 = xs.min() - PAD, xs.max() + PAD, ys.min() - PAD, ys.max() + PAD
 fw, fh = X1 - X0, Y1 - Y0
-strip = Image.new('RGBA', (fw * 11, fh), (0, 0, 0, 0))
+strip = Image.new('RGBA', (fw * 12, fh), (0, 0, 0, 0))
 for i, s in enumerate(shifted):
     a = Image.fromarray((s[Y0:Y1, X0:X1] * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(0.6))
     fr = Image.new('RGBA', (fw, fh), (255, 255, 255, 0)); fr.putalpha(a)
@@ -81,7 +101,7 @@ for i, s in enumerate(shifted):
 strip.save(D + '/gallop_strip.png', optimize=True)
 
 # métricas útiles para colocar el sprite: nariz, nalga, cascos (en coords del fotograma)
-meta = {'frames': 11, 'fw': int(fw), 'fh': int(fh)}
+meta = {'frames': 12, 'fw': int(fw), 'fh': int(fh)}
 noses, rumps, feet = [], [], []
 for s in shifted:
     c = s[Y0:Y1, X0:X1]
@@ -95,7 +115,7 @@ print(meta)
 
 # hoja de control
 sheet = Image.new('RGB', (fw * 4, fh * 3), (16, 99, 42))
-for i in range(11):
+for i in range(12):
     fr = strip.crop((i * fw, 0, (i + 1) * fw, fh))
     cell = Image.new('RGB', (fw, fh), (16, 99, 42)); cell.paste(fr, (0, 0), fr)
     ImageDraw.Draw(cell).text((4, 4), f'#{i+1}', fill='yellow')
