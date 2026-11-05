@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import type { EventWithVideos, Video } from '@/lib/data';
 import { eventDates, STAGE_LABEL, STATUS_LABEL } from '@/lib/format';
+import { YouTubePlayer } from './YouTubePlayer';
 
 type Selected = { id: string; title: string; live: boolean };
 
@@ -10,13 +11,18 @@ const KIND_LABEL: Record<Video['kind'], string> = { dia: 'Competencia', sorteo: 
 
 export function LiveCenter({ liveId, events }: { liveId: string | null; events: EventWithVideos[] }) {
   // Sin directo, arranca con el último día de competencia publicado.
-  const lastDay = [...events].reverse().flatMap((e) => [...e.videos].reverse().map((v) => ({ e, v }))).find(({ v }) => v.kind === 'dia');
+  const lastDay = [...events].reverse().flatMap((e) => [...e.videos].reverse().map((v) => ({ e, v }))).find(({ v }) => v.kind === 'dia' && !v.embed_blocked);
   const initial: Selected | null = liveId
     ? { id: liveId, title: 'Transmisión en vivo', live: true }
     : lastDay
       ? { id: lastDay.v.youtube_id, title: `${STAGE_LABEL[lastDay.e.stage]} · ${lastDay.v.title}`, live: false }
       : null;
   const [selected, setSelected] = useState<Selected | null>(initial);
+  // Videos que no se pueden ver aquí: marcados en la base de datos o rechazados por YouTube en este dispositivo.
+  const [blocked, setBlocked] = useState<Set<string>>(
+    () => new Set(events.flatMap((e) => e.videos.filter((v) => v.embed_blocked).map((v) => v.youtube_id))),
+  );
+  const markBlocked = useCallback((id: string) => setBlocked((prev) => new Set(prev).add(id)), []);
 
   const play = (e: EventWithVideos, v: Video) => {
     setSelected({ id: v.youtube_id, title: `${STAGE_LABEL[e.stage]} · ${v.title}`, live: false });
@@ -43,15 +49,17 @@ export function LiveCenter({ liveId, events }: { liveId: string | null; events: 
           </div>
         )}
         <div className="player">
-          {selected ? (
-            <iframe
-              key={selected.id}
-              src={`https://www.youtube.com/embed/${selected.id}?rel=0${selected.live ? '&autoplay=1&mute=1' : ''}`}
-              title={selected.title}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              referrerPolicy="strict-origin-when-cross-origin"
-              allowFullScreen
-            />
+          {selected && blocked.has(selected.id) ? (
+            <a className="player-fallback" href={`https://www.youtube.com/watch?v=${selected.id}`} target="_blank" rel="noreferrer">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={`https://i.ytimg.com/vi/${selected.id}/hqdefault.jpg`} alt="" />
+              <span className="player-fallback__body">
+                <span className="player-fallback__text">Este video solo se puede ver en YouTube</span>
+                <span className="btn btn--live">▶ Ver en YouTube</span>
+              </span>
+            </a>
+          ) : selected ? (
+            <YouTubePlayer key={selected.id} id={selected.id} title={selected.title} live={selected.live} onBlocked={markBlocked} />
           ) : (
             <div className="empty">La transmisión aparecerá aquí cuando comience.</div>
           )}
@@ -81,6 +89,7 @@ export function LiveCenter({ liveId, events }: { liveId: string | null; events: 
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={`https://i.ytimg.com/vi/${v.youtube_id}/hqdefault.jpg`} alt="" loading="lazy" />
                       <span className="vod__play" aria-hidden>▶</span>
+                      {blocked.has(v.youtube_id) && !active && <span className="vod__now">En YouTube</span>}
                       {active && <span className="vod__now">Reproduciendo</span>}
                     </span>
                     <span className="vod__kind">{KIND_LABEL[v.kind]}</span>

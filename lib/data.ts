@@ -57,6 +57,7 @@ export type Video = {
   title: string;
   kind: 'dia' | 'sorteo' | 'resumen' | 'otro';
   published_on: string | null;
+  embed_blocked: boolean;
 };
 
 export type EventWithVideos = CompetitionEvent & { videos: Video[] };
@@ -66,7 +67,7 @@ export async function getSeasonVideos(season: number): Promise<EventWithVideos[]
   const rows = check(
     await supabase
       .from('events')
-      .select('*, videos(youtube_id, title, kind, published_on, sort_order)')
+      .select('*, videos(youtube_id, title, kind, published_on, embed_blocked, sort_order)')
       .eq('season', season)
       .order('sort_order', { referencedTable: 'videos' }),
   ) as EventWithVideos[];
